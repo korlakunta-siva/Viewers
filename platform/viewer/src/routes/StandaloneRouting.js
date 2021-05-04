@@ -109,6 +109,8 @@ class StandaloneRouting extends Component {
             });
           });
 
+          log.info('Loading CIS Data: ', data);
+
           resolve({ studies: data.studies, studyInstanceUIDs: [] });
         }
       });
