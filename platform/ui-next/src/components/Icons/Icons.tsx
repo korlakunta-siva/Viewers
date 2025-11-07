@@ -66,6 +66,8 @@ import Trash from './Sources/Trash';
 import ViewportViews from './Sources/ViewportViews';
 import Sorting from './Sources/Sorting';
 import Upload from './Sources/Upload';
+import UploadFile from './Sources/UploadFile';
+import UploadFolder from './Sources/UploadFolder';
 import LaunchArrow from './Sources/LaunchArrow';
 import LaunchInfo from './Sources/LaunchInfo';
 import GroupLayers from './Sources/GroupLayers';
@@ -470,6 +472,8 @@ export const Icons = {
   LaunchArrow,
   LaunchInfo,
   Upload,
+  UploadFile,
+  UploadFolder,
   Actions,
   Add,
   Cancel,
@@ -751,6 +755,10 @@ export const Icons = {
   'icon-alert-outline': (props: IconProps) => AlertOutline(props),
   'status-alert': (props: IconProps) => StatusAlert(props),
   info: (props: IconProps) => Info(props),
+  upload: (props: IconProps) => Upload(props),
+  'upload-file': (props: IconProps) => UploadFile(props),
+  'upload-folder': (props: IconProps) => UploadFolder(props),
+  database: (props: IconProps) => Database(props),
   'notifications-info': (props: IconProps) => NotificationInfo(props),
   'notificationwarning-diamond': (props: IconProps) => NotificationWarning(props),
   'content-prev': (props: IconProps) => ContentPrev(props),

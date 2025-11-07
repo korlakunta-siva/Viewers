@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import classnames from 'classnames';
 import PropTypes from 'prop-types';
 import { Link, useNavigate } from 'react-router-dom';
@@ -10,7 +10,9 @@ import { useTranslation } from 'react-i18next';
 import filtersMeta from './filtersMeta.js';
 import { useAppConfig } from '@state';
 import { useDebounce, useSearchParams } from '../../hooks';
-import { utils, Types as coreTypes } from '@ohif/core';
+import { utils, Types as coreTypes, DicomMetadataStore, MODULE_TYPES } from '@ohif/core';
+import { extensionManager } from '../../App';
+import filesToStudies from '../Local/filesToStudies';
 
 import {
   StudyListExpandedRow,
@@ -60,11 +62,15 @@ function WorkList({
   dataPath,
   onRefresh,
   servicesManager,
+  extensionManager: extManager,
 }: withAppTypes) {
   const { show, hide } = useModal();
   const { t } = useTranslation();
   // ~ Modes
   const [appConfig] = useAppConfig();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
   // ~ Filters
   const searchParams = useSearchParams();
   const navigate = useNavigate();
@@ -482,7 +488,120 @@ function WorkList({
     'ohif.userPreferencesModal'
   ) as coreTypes.MenuComponentCustomization;
 
+  // Get data source name to check if we're using dicomlocal
+  // Check URL params first, then dataSource config, then app config
+  let dataSourceName = searchParams.get('datasources');
+  if (!dataSourceName && dataSource) {
+    const dataSourceConfig = dataSource.getConfig?.();
+    dataSourceName = dataSourceConfig?.sourceName;
+  }
+  if (!dataSourceName) {
+    dataSourceName = window.config?.defaultDataSourceName === 'dicomlocal' ? 'dicomlocal' : null;
+  }
+  if (!dataSourceName && appConfig?.AppEntry === 'localonly') {
+    dataSourceName = 'dicomlocal';
+  }
+  const isLocalDataSource = dataSourceName === 'dicomlocal';
+
+  // Initialize local data source for file uploads (always initialize if available)
+  const localDataSourceRef = useRef(null);
+  useEffect(() => {
+    if (!localDataSourceRef.current) {
+      const dataSourceModules = extensionManager.modules[MODULE_TYPES.DATA_SOURCE];
+      const localDataSources = dataSourceModules.reduce((acc, curr) => {
+        const mods = [];
+        curr.module.forEach(mod => {
+          if (mod.type === 'localApi') {
+            mods.push(mod);
+          }
+        });
+        return acc.concat(mods);
+      }, []);
+      if (localDataSources.length > 0) {
+        localDataSourceRef.current = localDataSources[0].createDataSource({});
+      }
+    }
+  }, []);
+
+  // Handle file/folder upload
+  const handleFileUpload = async (files: FileList | null, isFolder: boolean) => {
+    if (!files || files.length === 0 || !localDataSourceRef.current) return;
+
+    setIsUploading(true);
+    try {
+      const fileArray = Array.from(files);
+      const studies = await filesToStudies(fileArray, localDataSourceRef.current);
+
+      const query = new URLSearchParams();
+      studies.forEach(id => query.append('StudyInstanceUIDs', id));
+      query.append('datasources', 'dicomlocal');
+
+      // Navigate to worklist with the new studies
+      navigate(`/?${decodeURIComponent(query.toString())}`);
+
+      // Refresh the study list
+      if (onRefresh) {
+        onRefresh();
+      }
+    } catch (error) {
+      console.error('Error uploading files:', error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleUploadFileClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleUploadFolderClick = () => {
+    folderInputRef.current?.click();
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleFileUpload(e.target.files, false);
+    // Reset input so same file can be selected again
+    if (e.target) {
+      e.target.value = '';
+    }
+  };
+
+  const handleFolderInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleFileUpload(e.target.files, true);
+    // Reset input so same folder can be selected again
+    if (e.target) {
+      e.target.value = '';
+    }
+  };
+
+  // Action items for direct icons in app bar (with tooltips)
+  const actionItems = [
+    {
+      title: t('Header:Upload File') || 'Upload File',
+      icon: 'upload-file',
+      tooltip: t('Header:Upload File') || 'Upload File',
+      onClick: handleUploadFileClick,
+    },
+    {
+      title: t('Header:Upload Folder') || 'Upload Folder',
+      icon: 'upload-folder',
+      tooltip: t('Header:Upload Folder') || 'Upload Folder',
+      onClick: handleUploadFolderClick,
+    },
+  ];
+
   const menuOptions = [
+    // Upload options in menu (using combo icons)
+    {
+      title: t('Header:Upload File') || 'Upload File',
+      icon: 'upload-file',
+      onClick: handleUploadFileClick,
+    },
+    {
+      title: t('Header:Upload Folder') || 'Upload Folder',
+      icon: 'upload-folder',
+      onClick: handleUploadFolderClick,
+    },
     {
       title: AboutModal?.menuTitle ?? t('Header:About'),
       icon: 'info',
@@ -553,9 +672,28 @@ function WorkList({
 
   return (
     <div className="flex h-screen flex-col bg-black">
+      {/* Hidden file inputs for upload */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        accept=".dcm,.dicom"
+        style={{ display: 'none' }}
+        onChange={handleFileInputChange}
+      />
+      <input
+        ref={folderInputRef}
+        type="file"
+        multiple
+        webkitdirectory="true"
+        mozdirectory="true"
+        style={{ display: 'none' }}
+        onChange={handleFolderInputChange}
+      />
       <Header
         isSticky
         menuOptions={menuOptions}
+        actionItems={actionItems}
         isReturnEnabled={false}
         WhiteLabeling={appConfig.whiteLabeling}
         showPatientInfo={PatientInfoVisibility.DISABLED}

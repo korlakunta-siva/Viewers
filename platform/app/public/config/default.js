@@ -9,7 +9,7 @@ window.config = {
   customizationService: {},
   showStudyList: true,
   // AppEntry: 'local' or 'localonly' to redirect to /local on app load
-  // 'localonly' also hides the WorkList (study list) route - useful for patient CD viewers
+  // 'localonly' restricts to local images only (defaults to dicomlocal data source)
   // If missing or other value, defaults to / (study list)
   AppEntry: 'localonly',
   // some windows systems have issues with more than 3 web workers

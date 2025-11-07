@@ -102,13 +102,19 @@ function Local({ modePath }: LocalProps) {
       }
     }
 
-    // Navigate to viewer mode
-    // If modePath is empty, default to 'basic' viewer (for localonly mode compatibility)
-    const targetMode = modePath || 'basic';
+    // Navigate to viewer mode or worklist
+    // If modePath is empty, navigate to worklist (/) to let user select a study
+    // Otherwise navigate to the specified viewer mode
     studies.forEach(id => query.append('StudyInstanceUIDs', id));
     query.append('datasources', 'dicomlocal');
 
-    navigate(`/${targetMode}?${decodeURIComponent(query.toString())}`);
+    if (modePath) {
+      // Navigate to specific viewer mode (e.g., 'viewer/dicomlocal' or 'microscopy')
+      navigate(`/${modePath}?${decodeURIComponent(query.toString())}`);
+    } else {
+      // Navigate to worklist (study list) so user can select which study to view
+      navigate(`/?${decodeURIComponent(query.toString())}`);
+    }
   };
 
   // Set body style

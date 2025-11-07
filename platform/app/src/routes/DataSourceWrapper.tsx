@@ -7,6 +7,7 @@ import { extensionManager } from '../App';
 import { useParams, useLocation } from 'react-router';
 import { useNavigate } from 'react-router-dom';
 import useSearchParams from '../hooks/useSearchParams';
+import { useAppConfig } from '@state';
 
 /**
  * Determines if two React Router location objects are the same.
@@ -50,11 +51,27 @@ function DataSourceWrapper(props: withAppTypes) {
     location: 'Not a valid location, causes first load to occur',
   };
 
+  const [appConfig] = useAppConfig();
+  const isLocalOnly = appConfig?.AppEntry === 'localonly';
+
   const getInitialDataSourceName = useCallback(() => {
     // TODO - get the variable from the props all the time...
     let dataSourceName = lowerCaseSearchParams.get('datasources');
 
-    if (!dataSourceName && window.config.defaultDataSourceName) {
+    // If datasource is explicitly specified in URL (e.g., from local file upload), use it
+    if (dataSourceName) {
+      return dataSourceName;
+    }
+
+    // In localonly mode, default to dicomlocal to restrict users to local images only
+    // This prevents showing sample/remote OHIF studies
+    if (isLocalOnly) {
+      return 'dicomlocal';
+    }
+
+    // Original behavior: return empty string if defaultDataSourceName is set
+    // This allows the app to handle it appropriately without forcing a query
+    if (window.config.defaultDataSourceName) {
       return '';
     }
 
@@ -78,7 +95,7 @@ function DataSourceWrapper(props: withAppTypes) {
     }
 
     return dataSourceName;
-  }, []);
+  }, [isLocalOnly]);
 
   const [isDataSourceInitialized, setIsDataSourceInitialized] = useState(false);
 

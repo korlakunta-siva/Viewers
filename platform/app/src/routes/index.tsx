@@ -112,12 +112,13 @@ const createRoutes = ({
 
   console.log('Registering worklist route', routerBasename, path);
 
-  // Get AppEntry config to determine if we should hide the study list
+  // Get AppEntry config
   const appEntry = appConfig?.AppEntry;
   const isLocalOnly = appEntry === 'localonly';
 
-  // Hide WorkList route if AppEntry is "localonly"
-  const shouldShowStudyList = showStudyList && !isLocalOnly;
+  // In localonly mode, we still show the study list, but it will only show local studies
+  // because DataSourceWrapper will default to dicomlocal data source
+  const shouldShowStudyList = showStudyList;
 
   const WorkListRoute = {
     path: '/',
