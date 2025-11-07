@@ -70,8 +70,7 @@ const InvestigationalUseDialog = ({
           <Icons.InvestigationalUse className="h-18 w-18" />
           <div className="flex flex-col">
             <div className="text-[19px] text-white">
-              Apex Viewer is{' '}
-              <span className="text-primary-light">{t('for investigational use only')}</span>
+              {t('nondiagnostic message')}
             </div>
             <div className="text-[13px] text-white">
               <span
