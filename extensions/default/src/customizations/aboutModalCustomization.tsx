@@ -12,7 +12,14 @@ function AboutModalDefault() {
 
   return (
     <AboutModal className="w-[400px]">
-      <AboutModal.ProductName>OHIF Viewer</AboutModal.ProductName>
+      <div className="flex justify-center mb-4">
+        <img
+          src="/assets/favicon.ico"
+          alt="Apex Viewer"
+          style={{ width: '64px', height: '64px' }}
+        />
+      </div>
+      <AboutModal.ProductName>Apex Viewer</AboutModal.ProductName>
       <AboutModal.ProductVersion>{main}</AboutModal.ProductVersion>
       {beta && <AboutModal.ProductBeta>{beta}</AboutModal.ProductBeta>}
 
