@@ -134,7 +134,14 @@ function Local({ modePath }: LocalProps) {
           <div className="flex h-screen w-screen items-center justify-center">
             <div className="bg-muted border-primary/60 mx-auto space-y-2 rounded-xl border border-dashed py-12 px-12 drop-shadow-md">
               <div className="flex items-center justify-center">
-                <Icons.OHIFLogoColorDarkBackground className="h-18" />
+                <div className="flex items-center gap-3">
+                  <img
+                    src="/assets/favicon.ico"
+                    alt="Apex Viewer"
+                    style={{ width: '72px', height: '72px' }}
+                  />
+                  <span className="text-white text-2xl font-medium">Apex Viewer</span>
+                </div>
               </div>
               <div className="space-y-2 py-6 text-center">
                 {dropInitiated ? (
