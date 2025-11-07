@@ -90,7 +90,23 @@ function App({
   hotkeysManager = init.hotkeysManager;
 
   // Set appConfig
-  const appConfigState = init.appConfig;
+  // Read user preferences from localStorage and merge with appConfig
+  const getUserPreferences = () => {
+    try {
+      const stored = localStorage.getItem('ohif-user-preferences');
+      return stored ? JSON.parse(stored) : {};
+    } catch (error) {
+      console.warn('Failed to read user preferences from localStorage:', error);
+      return {};
+    }
+  };
+
+  const userPreferences = getUserPreferences();
+  const appConfigState = {
+    ...init.appConfig,
+    // Override autoPlayCine with user preference if it exists, default to true
+    autoPlayCine: userPreferences.autoPlayCine ?? init.appConfig.autoPlayCine ?? true,
+  };
   const { routerBasename, modes, dataSources, oidc, showStudyList } = appConfigState;
 
   // get the maximum 3D texture size

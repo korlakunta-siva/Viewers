@@ -1,10 +1,32 @@
 import React, { useState } from 'react';
 import { useSystem, hotkeys as hotkeysModule } from '@ohif/core';
-import { UserPreferencesModal, FooterAction } from '@ohif/ui-next';
+import { UserPreferencesModal, FooterAction, Switch, Label } from '@ohif/ui-next';
 import { useTranslation } from 'react-i18next';
 import i18n from '@ohif/i18n';
+import { useAppConfig } from '@state';
 
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@ohif/ui-next';
+
+const USER_PREFERENCES_KEY = 'ohif-user-preferences';
+
+// Helper functions to read/write user preferences from localStorage
+const getUserPreferences = () => {
+  try {
+    const stored = localStorage.getItem(USER_PREFERENCES_KEY);
+    return stored ? JSON.parse(stored) : {};
+  } catch (error) {
+    console.warn('Failed to read user preferences from localStorage:', error);
+    return {};
+  }
+};
+
+const setUserPreferences = (preferences) => {
+  try {
+    localStorage.setItem(USER_PREFERENCES_KEY, JSON.stringify(preferences));
+  } catch (error) {
+    console.warn('Failed to save user preferences to localStorage:', error);
+  }
+};
 
 const { availableLanguages, defaultLanguage, currentLanguage: currentLanguageFn } = i18n;
 
@@ -20,14 +42,17 @@ interface HotkeyDefinitions {
 function UserPreferencesModalDefault({ hide }: { hide: () => void }) {
   const { hotkeysManager } = useSystem();
   const { t } = useTranslation('UserPreferencesModal');
+  const [appConfig, setAppConfig] = useAppConfig();
 
   const { hotkeyDefinitions = {}, hotkeyDefaults = {} } = hotkeysManager;
 
   const currentLanguage = currentLanguageFn();
+  const userPreferences = getUserPreferences();
 
   const [state, setState] = useState({
     hotkeyDefinitions: hotkeyDefinitions as HotkeyDefinitions,
     languageValue: currentLanguage.value,
+    autoPlayCine: userPreferences.autoPlayCine ?? appConfig?.autoPlayCine ?? true,
   });
 
   const onLanguageChangeHandler = (value: string) => {
@@ -47,11 +72,19 @@ function UserPreferencesModalDefault({ hide }: { hide: () => void }) {
     }));
   };
 
+  const onAutoPlayCineChange = (checked: boolean) => {
+    setState(state => ({
+      ...state,
+      autoPlayCine: checked,
+    }));
+  };
+
   const onResetHandler = () => {
     setState(state => ({
       ...state,
       languageValue: defaultLanguage.value,
       hotkeyDefinitions: hotkeyDefaults as HotkeyDefinitions,
+      autoPlayCine: true,
     }));
 
     hotkeysManager.restoreDefaultBindings();
@@ -84,6 +117,21 @@ function UserPreferencesModalDefault({ hide }: { hide: () => void }) {
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        {/* Auto-play Cine Section */}
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex flex-col">
+            <UserPreferencesModal.SubHeading>{t('Auto-play Cine')}</UserPreferencesModal.SubHeading>
+            <Label className="text-muted-foreground mt-1 text-sm">
+              {t('Auto-play Cine Description')}
+            </Label>
+          </div>
+          <Switch
+            checked={state.autoPlayCine}
+            onCheckedChange={onAutoPlayCineChange}
+            aria-label={t('Auto-play Cine')}
+          />
         </div>
 
         <UserPreferencesModal.SubHeading>{t('Hotkeys')}</UserPreferencesModal.SubHeading>
@@ -122,6 +170,20 @@ function UserPreferencesModalDefault({ hide }: { hide: () => void }) {
                 i18n.changeLanguage(state.languageValue);
               }
               hotkeysManager.setHotkeys(state.hotkeyDefinitions);
+
+              // Save autoPlayCine preference
+              const preferences = {
+                ...getUserPreferences(),
+                autoPlayCine: state.autoPlayCine,
+              };
+              setUserPreferences(preferences);
+
+              // Update appConfig dynamically
+              setAppConfig({
+                ...appConfig,
+                autoPlayCine: state.autoPlayCine,
+              });
+
               hotkeysModule.stopRecord();
               hotkeysModule.unpause();
               hide();

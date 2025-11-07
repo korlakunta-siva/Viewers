@@ -5,5 +5,7 @@
   "ResetDefaultMessage": "Preferences successfully reset to default. <br /> You must <strong>Save</strong> to perform this action.",
   "Save": "$t(Buttons:Save)",
   "SaveMessage": "Preferences saved",
-  "User preferences": "User Preferences"
+  "User preferences": "User Preferences",
+  "Auto-play Cine": "Auto-play Cine",
+  "Auto-play Cine Description": "Automatically play cine animation when multiframe instances are loaded"
 }

@@ -43,11 +43,36 @@ function WrappedCinePlayer({
     displaySetInstanceUIDs.forEach(displaySetInstanceUID => {
       const displaySet = displaySetService.getDisplaySetByUID(displaySetInstanceUID);
 
+      // Check if this is a true multiframe instance (single DICOM file with NumberOfFrames > 1)
+      // This is different from a series with multiple single-frame instances
+      let isMultiframe = false;
+
+      // A true multiframe instance is one where a single DICOM instance file contains multiple frames
+      // Check if displaySet has instances array and if any instance has NumberOfFrames > 1
+      if (displaySet.instances && displaySet.instances.length > 0) {
+        // Check if any instance in the displaySet has NumberOfFrames > 1
+        // This indicates a true multiframe instance (one file with multiple frames)
+        isMultiframe = displaySet.instances.some(instance => {
+          const numberOfFrames = instance.NumberOfFrames || instance.numberOfFrames;
+          return numberOfFrames != null && numberOfFrames > 1;
+        });
+      }
+
+      // Also check the isMultiFrame flag if it's explicitly set (set by SOP class handlers)
+      // This is the most reliable indicator
+      if (!isMultiframe && displaySet.isMultiFrame === true) {
+        isMultiframe = true;
+      }
+
       if (displaySet.FrameRate) {
         // displaySet.FrameRate corresponds to DICOM tag (0018,1063) which is defined as the the frame time in milliseconds
         // So a bit of math to get the actual frame rate.
         frameRate = Math.round(1000 / displaySet.FrameRate);
         isPlaying ||= !!appConfig.autoPlayCine;
+      } else if (isMultiframe && appConfig.autoPlayCine) {
+        // For multiframe instances without FrameRate, use default frame rate and auto-play if enabled
+        frameRate = 24; // Default frame rate for multiframe without explicit FrameRate
+        isPlaying = true;
       }
 
       // check if the displaySet is dynamic and set the dynamic info
