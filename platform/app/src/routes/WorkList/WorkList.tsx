@@ -21,12 +21,15 @@ import {
   StudyListExpandedRow,
   EmptyStudies,
   StudyListTable,
-  StudyListPagination,
   StudyListFilter,
   Button,
   ButtonEnums,
 } from '@ohif/ui';
 import SimpleStudyView from './SimpleStudyView';
+import PdfViewer from '../../apexcode/components/PdfViewer';
+import { getPdfForStudy } from '../../apexcode/utils/pdfStorage';
+import ThemeSelector from '../../apexcode/components/ThemeSelector';
+import ThemeSelectorMenu from '../../apexcode/components/ThemeSelectorMenu';
 
 import {
   Header,
@@ -79,6 +82,7 @@ function WorkList({
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [pendingZipFile, setPendingZipFile] = useState<File | null>(null);
   const [showExtractDialog, setShowExtractDialog] = useState(false);
+  const [selectedPdfStudy, setSelectedPdfStudy] = useState<string | null>(null);
   // ~ Filters
   const searchParams = useSearchParams();
   const navigate = useNavigate();
@@ -656,8 +660,34 @@ function WorkList({
     setPendingZipFile(null);
   };
 
+  // Handle PDF toggle for study reports
+  const handlePdfToggle = (studyInstanceUid: string) => {
+    if (selectedPdfStudy === studyInstanceUid) {
+      // If already selected, close the PDF viewer
+      setSelectedPdfStudy(null);
+    } else {
+      // Select the study and show its PDF
+      setSelectedPdfStudy(studyInstanceUid);
+    }
+  };
+
+  // Get PDF file for selected study
+  const selectedPdfFile = selectedPdfStudy ? getPdfForStudy(selectedPdfStudy) : null;
+
+  // Get study data for selected PDF study
+  const selectedPdfStudyData = selectedPdfStudy
+    ? sortedStudies.find(s => s.studyInstanceUid === selectedPdfStudy)
+    : null;
+
   // Action items for direct icons in app bar (with tooltips)
   const actionItems = [
+    {
+      title: t('Header:Theme') || 'Theme',
+      icon: 'color-change',
+      tooltip: t('Header:Theme') || 'Theme',
+      onClick: () => {}, // ThemeSelector handles its own dropdown
+      component: ThemeSelector, // Use component instead of onClick
+    },
     {
       title: t('Header:Help') || 'Help',
       icon: 'info',
@@ -710,6 +740,11 @@ function WorkList({
       title: t('Header:Extract DICOM from Encrypted ZIP') || 'Extract DICOM from Encrypted ZIP',
       icon: 'download',
       onClick: () => setShowExtractDialog(true),
+    },
+    {
+      title: t('Header:Theme') || 'Theme',
+      icon: 'color-change',
+      component: ThemeSelectorMenu,
     },
     {
       title: HelpModal?.menuTitle ?? (t('Header:Help') || 'Help'),
@@ -847,50 +882,66 @@ function WorkList({
       />
       <Onboarding />
       <InvestigationalUseDialog dialogConfiguration={appConfig?.investigationalUseDialog} />
-      <div className="flex h-full flex-col overflow-y-auto">
-        <ScrollArea>
-          <div className="flex grow flex-col">
-            <StudyListFilter
-              numOfStudies={pageNumber * resultsPerPage > 100 ? 101 : numOfStudies}
-              filtersMeta={filtersMeta}
-              filterValues={{ ...filterValues, ...defaultSortValues }}
-              onChange={setFilterValues}
-              clearFilters={() => setFilterValues(defaultFilterValues)}
-              isFiltering={isFiltering(filterValues, defaultFilterValues)}
-              onUploadClick={uploadProps ? () => show(uploadProps) : undefined}
-              getDataSourceConfigurationComponent={
-                dataSourceConfigurationComponent
-                  ? () => dataSourceConfigurationComponent()
-                  : undefined
-              }
-            />
-          </div>
-          {hasStudies ? (
+      {/* Dynamic layout: 1/3 list + 2/3 PDF when PDF is shown, full height list when PDF is hidden */}
+      <div className="flex h-full flex-col overflow-hidden">
+        {/* Study List Section - 1/3 when PDF shown, full height when PDF hidden - Scrollable */}
+        <div
+          className={`flex flex-col border-b border-secondary-light overflow-hidden ${
+            selectedPdfStudy ? 'h-1/3 min-h-[200px]' : 'h-full'
+          }`}
+        >
+          <ScrollArea className="flex-1">
             <div className="flex grow flex-col">
-              <SimpleStudyView
-                studies={sortedStudies.slice(offset, offsetAndTake)}
-                dataPath={dataPath}
-                filterValues={filterValues}
+              <StudyListFilter
+                numOfStudies={numOfStudies}
+                filtersMeta={filtersMeta}
+                filterValues={{ ...filterValues, ...defaultSortValues }}
+                onChange={setFilterValues}
+                clearFilters={() => setFilterValues(defaultFilterValues)}
+                isFiltering={isFiltering(filterValues, defaultFilterValues)}
+                onUploadClick={uploadProps ? () => show(uploadProps) : undefined}
+                getDataSourceConfigurationComponent={
+                  dataSourceConfigurationComponent
+                    ? () => dataSourceConfigurationComponent()
+                    : undefined
+                }
               />
-              <div className="grow">
-                <StudyListPagination
-                  onChangePage={onPageNumberChange}
-                  onChangePerPage={onResultsPerPageChange}
-                  currentPage={pageNumber}
-                  perPage={resultsPerPage}
+            </div>
+            {hasStudies ? (
+              <div className="flex grow flex-col overflow-y-auto">
+                <SimpleStudyView
+                  studies={sortedStudies}
+                  dataPath={dataPath}
+                  filterValues={filterValues}
+                  selectedPdfStudy={selectedPdfStudy}
+                  onPdfToggle={handlePdfToggle}
                 />
               </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center pt-48">
-              {appConfig.showLoadingIndicator && isLoadingData ? (
-                <LoadingIndicatorProgress className={'h-full w-full bg-black'} />
-              ) : !isUploading ? (
-                <EmptyStudies />
-              ) : null}
-            </div>
-          )}
-        </ScrollArea>
+            ) : (
+              <div className="flex flex-col items-center justify-center pt-48">
+                {appConfig.showLoadingIndicator && isLoadingData ? (
+                  <LoadingIndicatorProgress className={'h-full w-full bg-black'} />
+                ) : !isUploading ? (
+                  <EmptyStudies />
+                ) : null}
+              </div>
+            )}
+          </ScrollArea>
+        </div>
+        {/* PDF Viewer Section - 2/3 when PDF shown, hidden when no PDF */}
+        {selectedPdfStudy && (
+          <div className="flex h-2/3 flex-1 flex-col overflow-hidden">
+            <PdfViewer
+              pdfFile={selectedPdfFile}
+              studyInstanceUid={selectedPdfStudy}
+              patientName={selectedPdfStudyData?.patientName}
+              patientId={selectedPdfStudyData?.mrn}
+              studyDate={selectedPdfStudyData?.date}
+              studyTime={selectedPdfStudyData?.time}
+              onClose={() => setSelectedPdfStudy(null)}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

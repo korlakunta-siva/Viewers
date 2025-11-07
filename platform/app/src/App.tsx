@@ -36,6 +36,7 @@ import appInit from './appInit.js';
 import OpenIdConnectRoutes from './utils/OpenIdConnectRoutes';
 import { ShepherdJourneyProvider } from 'react-shepherd';
 import './App.css';
+import './apexcode/styles/theme.css';
 
 let commandsManager: CommandsManager,
   extensionManager: ExtensionManager,

@@ -24,13 +24,15 @@ interface HeaderProps {
   menuOptions: Array<{
     title: string;
     icon?: string;
-    onClick: () => void;
+    onClick?: () => void;
+    component?: React.ComponentType;
   }>;
   actionItems?: Array<{
     title: string;
     icon: string;
     onClick: () => void;
     tooltip?: string;
+    component?: React.ComponentType;
   }>;
   isReturnEnabled?: boolean;
   onClickReturnButton?: () => void;
@@ -94,11 +96,15 @@ function Header({
             </div>
             <div className="absolute right-0 top-1/2 flex -translate-y-1/2 select-none items-center">
               {UndoRedo}
-              <div className="border-primary-dark mx-1.5 h-[25px] border-r"></div>
               {PatientInfo}
-              <div className="border-primary-dark mx-1.5 h-[25px] border-r"></div>
               {/* Action items (direct icons) */}
               {actionItems.map((action, index) => {
+                // If action has a component, render it directly
+                if ((action as any).component) {
+                  const Component = (action as any).component;
+                  return <Component key={index} />;
+                }
+
                 return (
                   <React.Fragment key={index}>
                     <Tooltip>
@@ -108,7 +114,7 @@ function Header({
                           size="icon"
                           className="text-primary hover:bg-primary-dark mx-2 h-full"
                           onClick={action.onClick}
-                          title={action.tooltip || action.title}
+                          title={action.tooltip ? undefined : (action.title || undefined)}
                         >
                           <Icons.ByName name={action.icon} />
                         </Button>
@@ -122,9 +128,6 @@ function Header({
                   </React.Fragment>
                 );
               })}
-              {actionItems.length > 0 && (
-                <div className="border-primary-dark mx-1.5 h-[25px] border-r"></div>
-              )}
               <div className="flex-shrink-0">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -138,6 +141,12 @@ function Header({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     {menuOptions.map((option, index) => {
+                      // If option has a component, render it directly
+                      if (option.component) {
+                        const Component = option.component;
+                        return <Component key={index} />;
+                      }
+
                       const IconComponent = option.icon
                         ? Icons[option.icon as keyof typeof Icons]
                         : null;

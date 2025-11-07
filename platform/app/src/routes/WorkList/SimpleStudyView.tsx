@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import moment from 'moment';
 import { Button, ButtonEnums } from '@ohif/ui';
+import { Icons } from '@ohif/ui-next';
 import { preserveQueryParameters } from '../../utils/preserveQueryParameters';
+import { hasPdfForStudy } from '../../apexcode/utils/pdfStorage';
 
 interface Study {
   studyInstanceUid: string;
@@ -21,9 +23,17 @@ interface SimpleStudyViewProps {
   studies: Study[];
   dataPath?: string;
   filterValues?: any;
+  selectedPdfStudy?: string | null;
+  onPdfToggle?: (studyInstanceUid: string) => void;
 }
 
-function SimpleStudyView({ studies, dataPath = '', filterValues = {} }: SimpleStudyViewProps) {
+function SimpleStudyView({
+  studies,
+  dataPath = '',
+  filterValues = {},
+  selectedPdfStudy = null,
+  onPdfToggle
+}: SimpleStudyViewProps) {
   const { t } = useTranslation();
   const [selectedStudies, setSelectedStudies] = useState<Set<string>>(new Set());
 
@@ -82,7 +92,7 @@ function SimpleStudyView({ studies, dataPath = '', filterValues = {} }: SimpleSt
   };
 
   return (
-    <div className="bg-black text-white">
+    <div className="bg-black text-white h-full overflow-y-auto">
       <div className="container m-auto">
         <table className="w-full table-fixed">
           <thead>
@@ -101,6 +111,7 @@ function SimpleStudyView({ studies, dataPath = '', filterValues = {} }: SimpleSt
                   className="mr-2"
                 />
               </th>
+              <th className="w-16 px-2 py-1.5 text-left text-sm font-semibold">{t('StudyList:Report') || 'Report'}</th>
               <th className="w-20 px-2 py-1.5 text-left text-sm font-semibold">{t('StudyList:View')}</th>
               <th className="w-48 px-2 py-1.5 text-left text-sm font-semibold">
                 {t('StudyList:PatientName')}
@@ -144,10 +155,20 @@ function SimpleStudyView({ studies, dataPath = '', filterValues = {} }: SimpleSt
               query.append('StudyInstanceUIDs', studyInstanceUid);
               preserveQueryParameters(query);
 
+              const hasPdf = hasPdfForStudy(studyInstanceUid);
+              const isPdfSelected = selectedPdfStudy === studyInstanceUid;
+
+              // Debug logging
+              if (hasPdf) {
+                console.log(`[PDF Check] Study ${studyInstanceUid} has PDF available`);
+              }
+
               return (
                 <tr
                   key={studyInstanceUid}
-                  className="border-b border-secondary-light hover:bg-secondary-main transition-colors"
+                  className={`border-b border-secondary-light hover:bg-secondary-main transition-colors ${
+                    isPdfSelected ? 'bg-secondary-dark' : ''
+                  }`}
                 >
                   <td className="px-2 py-1.5 whitespace-nowrap">
                     <input
@@ -156,6 +177,23 @@ function SimpleStudyView({ studies, dataPath = '', filterValues = {} }: SimpleSt
                       onChange={() => handleCheckboxChange(studyInstanceUid)}
                       className="cursor-pointer"
                     />
+                  </td>
+                  <td className="px-2 py-1.5 whitespace-nowrap">
+                    {hasPdf && onPdfToggle ? (
+                      <button
+                        onClick={() => onPdfToggle(studyInstanceUid)}
+                        className={`flex items-center justify-center p-1 rounded transition-colors ${
+                          isPdfSelected
+                            ? 'bg-primary-main text-white'
+                            : 'bg-secondary-dark text-primary-light hover:bg-secondary-main'
+                        }`}
+                        title={isPdfSelected ? t('StudyList:Hide Report') || 'Hide Report' : t('StudyList:View Report') || 'View Report'}
+                      >
+                        <Icons.ByName name="document" className="h-4 w-4" />
+                      </button>
+                    ) : (
+                      <span className="text-gray-500">-</span>
+                    )}
                   </td>
                   <td className="px-2 py-1.5 whitespace-nowrap">
                     <Link

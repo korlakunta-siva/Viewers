@@ -1,0 +1,773 @@
+/**
+ * Theme CSS Variables
+ * These variables are set dynamically by the theme system
+ * The theme system applies colors directly to override Tailwind defaults
+ */
+
+/* Base theme variables - will be overridden by JavaScript */
+:root {
+  --primary-light: #5acce6;
+  --primary-main: #0944b3;
+  --primary-dark: #090c29;
+  --primary-active: #348cfd;
+
+  --secondary-light: #3a3f99;
+  --secondary-main: #2b166b;
+  --secondary-dark: #041c4a;
+  --secondary-active: #1f1f27;
+
+  --bkg-low: #050615;
+  --bkg-med: #090C29;
+  --bkg-full: #041C4A;
+
+  --common-bright: #e1e1e1;
+  --common-light: #a19fad;
+  --common-main: #fff;
+  --common-dark: #726f7e;
+  --common-active: #2c3074;
+}
+
+/* Override Tailwind color classes using CSS variables and !important */
+/* This ensures theme changes actually affect the UI */
+[data-theme] .bg-primary-main,
+[data-theme] .bg-primary-dark,
+[data-theme] .bg-primary-light,
+[data-theme] .bg-primary-active,
+[data-theme] .text-primary-main,
+[data-theme] .text-primary-dark,
+[data-theme] .text-primary-light,
+[data-theme] .text-primary-active,
+[data-theme] .border-primary-main,
+[data-theme] .border-primary-dark,
+[data-theme] .border-primary-light,
+[data-theme] .border-primary-active {
+  /* Colors will be set via inline styles by JavaScript */
+}
+
+/* Apply theme-specific overrides for body and main containers */
+body[data-theme="dark"] {
+  background-color: var(--bkg-low, #050615) !important;
+  color: #ffffff !important;
+}
+
+body[data-theme="light"] {
+  background-color: #ffffff !important; /* White background for light theme */
+  color: #1a202c !important; /* Dark text */
+}
+
+body[data-theme="blue"] {
+  background-color: var(--bkg-low, #0c1220) !important;
+  color: #ffffff !important;
+}
+
+body[data-theme="green"] {
+  background-color: var(--bkg-low, #0a1f0a) !important;
+  color: #dcfce7 !important;
+}
+
+/* Override background colors for main UI elements - theme specific */
+[data-theme="dark"] .bg-black,
+[data-theme="dark"] .bg-secondary-dark,
+[data-theme="dark"] .bg-secondary-main {
+  background-color: var(--bkg-low, #050615) !important;
+}
+
+[data-theme="light"] .bg-black {
+  background-color: #ffffff !important; /* White instead of black for light theme */
+}
+
+[data-theme="light"] .bg-secondary-dark,
+[data-theme="light"] .bg-secondary-main {
+  background-color: var(--secondary-dark, #718096) !important;
+}
+
+[data-theme="blue"] .bg-black,
+[data-theme="blue"] .bg-secondary-dark,
+[data-theme="blue"] .bg-secondary-main {
+  background-color: var(--bkg-low, #0c1220) !important;
+}
+
+[data-theme="green"] .bg-black,
+[data-theme="green"] .bg-secondary-dark,
+[data-theme="green"] .bg-secondary-main {
+  background-color: var(--bkg-low, #0a1f0a) !important;
+}
+
+/* Override text colors - theme specific */
+[data-theme="dark"] .text-white,
+[data-theme="dark"] .text-common-main {
+  color: #ffffff !important;
+}
+
+[data-theme="light"] .text-white,
+[data-theme="light"] .text-common-main {
+  color: #1a202c !important; /* Dark text for light theme */
+}
+
+[data-theme="blue"] .text-white,
+[data-theme="blue"] .text-common-main {
+  color: #ffffff !important;
+}
+
+[data-theme="green"] .text-white,
+[data-theme="green"] .text-common-main {
+  color: #dcfce7 !important;
+}
+
+[data-theme="dark"] .text-gray-300,
+[data-theme="dark"] .text-common-light {
+  color: #a19fad !important;
+}
+
+[data-theme="light"] .text-gray-300,
+[data-theme="light"] .text-common-light {
+  color: #2d3748 !important; /* Darker gray for light theme */
+}
+
+[data-theme="blue"] .text-gray-300,
+[data-theme="blue"] .text-common-light {
+  color: #e0f2fe !important;
+}
+
+[data-theme="green"] .text-gray-300,
+[data-theme="green"] .text-common-light {
+  color: #bbf7d0 !important;
+}
+
+/* Override primary colors - theme specific for better contrast */
+[data-theme="dark"] .text-primary {
+  color: var(--primary-main, #0944b3) !important;
+}
+
+[data-theme="light"] .text-primary {
+  color: #0944b3 !important; /* Dark blue for light theme */
+}
+
+[data-theme="blue"] .text-primary {
+  color: var(--primary-main, #0ea5e9) !important;
+}
+
+[data-theme="green"] .text-primary {
+  color: var(--primary-main, #22c55e) !important;
+}
+
+[data-theme] .text-primary-light {
+  color: var(--primary-light) !important;
+}
+
+[data-theme] .text-primary-dark {
+  color: var(--primary-dark) !important;
+}
+
+[data-theme] .text-primary-active {
+  color: var(--primary-active) !important;
+}
+
+[data-theme] .bg-primary-main {
+  background-color: var(--primary-main) !important;
+}
+
+[data-theme] .bg-primary-dark {
+  background-color: var(--primary-dark) !important;
+}
+
+[data-theme] .bg-primary-light {
+  background-color: var(--primary-light) !important;
+}
+
+[data-theme] .bg-primary-active {
+  background-color: var(--primary-active) !important;
+}
+
+[data-theme] .border-primary-main {
+  border-color: var(--primary-main) !important;
+}
+
+[data-theme] .border-primary-dark {
+  border-color: var(--primary-dark) !important;
+}
+
+[data-theme] .border-primary-light {
+  border-color: var(--primary-light) !important;
+}
+
+[data-theme] .hover\:bg-primary-dark:hover {
+  background-color: var(--primary-dark) !important;
+}
+
+[data-theme] .hover\:bg-primary-main:hover {
+  background-color: var(--primary-main) !important;
+}
+
+/* Override OHIF UI-Next components */
+[data-theme] .bg-secondary-dark,
+[data-theme] .bg-secondary-main,
+[data-theme] .bg-secondary-light {
+  background-color: var(--secondary-main) !important;
+}
+
+[data-theme] .border-secondary-dark,
+[data-theme] .border-secondary-main,
+[data-theme] .border-secondary-light {
+  border-color: var(--secondary-main) !important;
+}
+
+/* Override viewport and panel backgrounds */
+[data-theme] .viewport-container,
+[data-theme] .viewport-element {
+  background-color: var(--bkg-low) !important;
+}
+
+/* Override button and interactive elements */
+[data-theme] button.text-primary,
+[data-theme] .text-primary {
+  color: var(--primary-main) !important;
+}
+
+[data-theme] button:hover.text-primary,
+[data-theme] .hover\:text-primary:hover {
+  color: var(--primary-light) !important;
+}
+
+/* Override study list and table backgrounds - theme specific */
+[data-theme="dark"] .study-list-container,
+[data-theme="dark"] table {
+  background-color: var(--bkg-low, #050615) !important;
+}
+
+[data-theme="light"] .study-list-container,
+[data-theme="light"] table {
+  background-color: #ffffff !important; /* White background for light theme */
+}
+
+[data-theme="blue"] .study-list-container,
+[data-theme="blue"] table {
+  background-color: var(--bkg-low, #0c1220) !important;
+}
+
+[data-theme="green"] .study-list-container,
+[data-theme="green"] table {
+  background-color: var(--bkg-low, #0a1f0a) !important;
+}
+
+/* Table thead is handled by theme-specific rules below */
+
+[data-theme="dark"] table tbody tr {
+  background-color: var(--bkg-low, #050615) !important;
+}
+
+[data-theme="light"] table tbody tr {
+  background-color: #ffffff !important; /* White rows for light theme */
+  color: #1a202c !important; /* Dark text */
+}
+
+[data-theme="blue"] table tbody tr {
+  background-color: var(--bkg-low, #0c1220) !important;
+}
+
+[data-theme="green"] table tbody tr {
+  background-color: var(--bkg-low, #0a1f0a) !important;
+}
+
+[data-theme="dark"] table tbody tr:hover {
+  background-color: var(--secondary-main, #2b166b) !important;
+}
+
+[data-theme="light"] table tbody tr:hover {
+  background-color: #cbd5e0 !important; /* Light gray hover for light theme */
+  color: #1a202c !important; /* Dark text on hover */
+}
+
+[data-theme="blue"] table tbody tr:hover {
+  background-color: var(--secondary-main, #1e293b) !important;
+}
+
+[data-theme="green"] table tbody tr:hover {
+  background-color: var(--secondary-main, #166534) !important;
+}
+
+/* Override for NavBar specifically - ensure high contrast for all themes */
+/* Target NavBar by its position in the Header structure */
+[data-theme] header .bg-secondary-dark,
+[data-theme] [data-cy="return-to-work-list"] ~ div .bg-secondary-dark {
+  background-color: var(--secondary-dark, #041c4a) !important;
+}
+
+/* Theme-specific NavBar backgrounds */
+[data-theme="dark"] header .bg-secondary-dark {
+  background-color: #041c4a !important;
+}
+
+[data-theme="light"] header .bg-secondary-dark {
+  background-color: #a0aec0 !important;
+}
+
+[data-theme="blue"] header .bg-secondary-dark {
+  background-color: #0f172a !important;
+}
+
+[data-theme="green"] header .bg-secondary-dark {
+  background-color: #166534 !important;
+}
+
+/* Only apply readable text/icons to Header NavBar area - be very specific */
+[data-theme] header .bg-secondary-dark > *,
+[data-theme] header .bg-secondary-dark .text-white,
+[data-theme] header .bg-secondary-dark .text-primary,
+[data-theme] header .bg-secondary-dark button {
+  color: var(--text-primary, #ffffff) !important;
+}
+
+/* Theme-specific NavBar text colors */
+[data-theme="dark"] header .bg-secondary-dark > *,
+[data-theme="dark"] header .bg-secondary-dark .text-white,
+[data-theme="dark"] header .bg-secondary-dark .text-primary,
+[data-theme="dark"] header .bg-secondary-dark button {
+  color: #ffffff !important;
+}
+
+[data-theme="light"] header .bg-secondary-dark > *,
+[data-theme="light"] header .bg-secondary-dark .text-white,
+[data-theme="light"] header .bg-secondary-dark .text-primary,
+[data-theme="light"] header .bg-secondary-dark button {
+  color: #1a202c !important;
+}
+
+[data-theme="blue"] header .bg-secondary-dark > *,
+[data-theme="blue"] header .bg-secondary-dark .text-white,
+[data-theme="blue"] header .bg-secondary-dark .text-primary,
+[data-theme="blue"] header .bg-secondary-dark button {
+  color: #ffffff !important;
+}
+
+[data-theme="green"] header .bg-secondary-dark > *,
+[data-theme="green"] header .bg-secondary-dark .text-white,
+[data-theme="green"] header .bg-secondary-dark .text-primary,
+[data-theme="green"] header .bg-secondary-dark button {
+  color: #dcfce7 !important;
+}
+
+/* Only force readable icons in Header NavBar area - very specific selectors */
+[data-theme] header .bg-secondary-dark svg,
+[data-theme] header .bg-secondary-dark svg path {
+  fill: currentColor !important;
+  stroke: currentColor !important;
+  color: inherit !important;
+}
+
+/* Ensure buttons in header have good contrast - all themes */
+[data-theme] header .bg-secondary-dark button.text-primary,
+[data-theme] header .bg-secondary-dark button {
+  color: inherit !important;
+}
+
+/* Theme-specific button hover colors */
+[data-theme="dark"] header .bg-secondary-dark button:hover {
+  color: #5acce6 !important;
+}
+
+[data-theme="light"] header .bg-secondary-dark button:hover {
+  color: #0944b3 !important;
+}
+
+[data-theme="blue"] header .bg-secondary-dark button:hover {
+  color: #7dd3fc !important;
+}
+
+[data-theme="green"] header .bg-secondary-dark button:hover {
+  color: #86efac !important;
+}
+
+/* Override for basic viewer route backgrounds */
+[data-theme="blue"] .viewport-container,
+[data-theme="blue"] .viewport-element,
+[data-theme="blue"] .bg-black {
+  background-color: var(--bkg-low, #0c1220) !important;
+}
+
+/* Ensure text in viewport and panels is readable - but not icons */
+[data-theme="blue"] .viewport-container p,
+[data-theme="blue"] .viewport-container span:not(svg *),
+[data-theme="blue"] .viewport-container div:not(svg *),
+[data-theme="blue"] .viewport-element p,
+[data-theme="blue"] .viewport-element span:not(svg *),
+[data-theme="blue"] .viewport-element div:not(svg *) {
+  color: var(--text-primary, #ffffff) !important;
+}
+
+/* Override for study list filter section */
+[data-theme="blue"] .bg-secondary-dark .text-white,
+[data-theme="blue"] .bg-secondary-main .text-white {
+  color: #ffffff !important;
+}
+
+/* Ensure table headers have good contrast */
+[data-theme="blue"] table thead {
+  background-color: #1e293b !important; /* Medium dark blue */
+  color: #ffffff !important;
+}
+
+[data-theme="blue"] table thead th {
+  color: #ffffff !important;
+}
+
+/* Ensure input fields have readable text */
+[data-theme="blue"] input,
+[data-theme="blue"] select,
+[data-theme="blue"] textarea {
+  color: #ffffff !important;
+  background-color: #1e293b !important;
+}
+
+[data-theme="blue"] input::placeholder,
+[data-theme="blue"] input::-webkit-input-placeholder {
+  color: #94a3b8 !important; /* Lighter gray for placeholders */
+}
+
+/* Ensure dialogs have fully opaque backgrounds */
+[data-theme] .bg-black\/60,
+[data-theme] [class*="bg-black/"] {
+  background-color: rgba(0, 0, 0, 0.9) !important; /* 90% opacity for overlay */
+}
+
+/* Ensure dialog content has solid background */
+[data-theme] .bg-muted,
+[data-theme] [data-radix-dialog-content] {
+  background-color: var(--secondary-dark, #041c4a) !important;
+  opacity: 1 !important;
+}
+
+/* For all themes - ensure dialogs are fully opaque */
+[data-theme] [data-radix-dialog-overlay] {
+  background-color: rgba(0, 0, 0, 0.9) !important;
+  opacity: 1 !important;
+}
+
+[data-theme] [data-radix-dialog-content] {
+  background-color: var(--secondary-dark, #041c4a) !important;
+  opacity: 1 !important;
+  color: var(--text-primary, #ffffff) !important;
+}
+
+/* Theme-specific dialog backgrounds */
+[data-theme="dark"] [data-radix-dialog-content] {
+  background-color: #041c4a !important;
+  color: #ffffff !important;
+}
+
+[data-theme="light"] [data-radix-dialog-content] {
+  background-color: #cbd5e0 !important;
+  color: #1a202c !important;
+}
+
+[data-theme="blue"] [data-radix-dialog-content] {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+}
+
+[data-theme="green"] [data-radix-dialog-content] {
+  background-color: #1a2e1a !important;
+  color: #dcfce7 !important;
+}
+
+/* Ensure dialog text is readable - but not icons */
+[data-theme] [data-radix-dialog-content] p,
+[data-theme] [data-radix-dialog-content] span:not(svg *):not([class*="icon"]),
+[data-theme] [data-radix-dialog-content] div:not(svg *):not([class*="icon"]),
+[data-theme] [data-radix-dialog-content] label,
+[data-theme] [data-radix-dialog-content] .text-primary,
+[data-theme] [data-radix-dialog-content] .text-primary-light {
+  color: inherit !important;
+}
+
+/* Ensure dropdown menus are fully opaque for all themes */
+[data-theme] [data-radix-dropdown-menu-content] {
+  background-color: var(--secondary-dark, #041c4a) !important;
+  opacity: 1 !important;
+  color: var(--text-primary, #ffffff) !important;
+}
+
+/* Theme-specific dropdown menu backgrounds */
+[data-theme="dark"] [data-radix-dropdown-menu-content] {
+  background-color: #041c4a !important;
+  color: #ffffff !important;
+}
+
+[data-theme="light"] [data-radix-dropdown-menu-content] {
+  background-color: #cbd5e0 !important;
+  color: #1a202c !important;
+}
+
+[data-theme="blue"] [data-radix-dropdown-menu-content] {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+}
+
+[data-theme="green"] [data-radix-dropdown-menu-content] {
+  background-color: #1a2e1a !important;
+  color: #dcfce7 !important;
+}
+
+/* Ensure dropdown menu items are readable */
+[data-theme] [data-radix-dropdown-menu-content] * {
+  color: inherit !important;
+}
+
+/* Override bg-popover class to use theme colors */
+[data-theme] .bg-popover {
+  background-color: var(--secondary-dark, #041c4a) !important;
+  opacity: 1 !important;
+}
+
+[data-theme="dark"] .bg-popover {
+  background-color: #041c4a !important;
+}
+
+[data-theme="light"] .bg-popover {
+  background-color: #cbd5e0 !important;
+}
+
+[data-theme="blue"] .bg-popover {
+  background-color: #0f172a !important;
+}
+
+[data-theme="green"] .bg-popover {
+  background-color: #1a2e1a !important;
+}
+
+/* Additional contrast improvements for Dark theme */
+[data-theme="dark"] header .bg-secondary-dark {
+  background-color: #041c4a !important;
+}
+
+[data-theme="dark"] .bg-secondary-dark,
+[data-theme="dark"] .bg-secondary-main {
+  background-color: var(--secondary-dark, #041c4a) !important;
+}
+
+/* Additional contrast improvements for Light theme */
+[data-theme="light"] header .bg-secondary-dark {
+  background-color: #718096 !important; /* Darker gray for better contrast */
+}
+
+[data-theme="light"] .bg-secondary-dark,
+[data-theme="light"] .bg-secondary-main {
+  background-color: var(--secondary-dark, #718096) !important;
+}
+
+/* Additional contrast improvements for Green theme */
+[data-theme="green"] header .bg-secondary-dark {
+  background-color: #0f4c1f !important; /* Very dark green for header */
+}
+
+[data-theme="green"] .bg-secondary-dark,
+[data-theme="green"] .bg-secondary-main {
+  background-color: var(--secondary-dark, #0f4c1f) !important;
+}
+
+/* Ensure table headers have good contrast for all themes */
+[data-theme="dark"] table thead {
+  background-color: #041c4a !important;
+  color: #ffffff !important;
+}
+
+[data-theme="light"] table thead {
+  background-color: #718096 !important; /* Darker gray for better contrast */
+  color: #ffffff !important; /* White text on dark gray header */
+}
+
+[data-theme="green"] table thead {
+  background-color: #166534 !important;
+  color: #dcfce7 !important;
+}
+
+[data-theme="dark"] table thead th {
+  color: #ffffff !important;
+}
+
+[data-theme="light"] table thead th {
+  color: #ffffff !important; /* White text on dark gray header */
+}
+
+[data-theme="green"] table thead th {
+  color: #dcfce7 !important;
+}
+
+/* Ensure input fields have readable text for all themes */
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  color: #ffffff !important;
+  background-color: #090C29 !important;
+}
+
+[data-theme="light"] input,
+[data-theme="light"] select,
+[data-theme="light"] textarea {
+  color: #1a202c !important; /* Dark text for readability */
+  background-color: #ffffff !important; /* White background */
+  border-color: #cbd5e0 !important; /* Visible border */
+}
+
+/* Ensure inputs in filter bar are also white in light theme */
+[data-theme="light"] .bg-primary-dark input,
+[data-theme="light"] .bg-secondary-dark input,
+[data-theme="light"] .bg-secondary-main input,
+[data-theme="light"] .bg-primary-dark select,
+[data-theme="light"] .bg-secondary-dark select,
+[data-theme="light"] .bg-secondary-main select {
+  color: #1a202c !important; /* Dark text */
+  background-color: #ffffff !important; /* White background for inputs */
+  border-color: #cbd5e0 !important; /* Visible border */
+}
+
+[data-theme="green"] input,
+[data-theme="green"] select,
+[data-theme="green"] textarea {
+  color: #dcfce7 !important;
+  background-color: #1a2e1a !important;
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] input::-webkit-input-placeholder {
+  color: #726f7e !important;
+}
+
+[data-theme="light"] input::placeholder,
+[data-theme="light"] input::-webkit-input-placeholder {
+  color: #718096 !important; /* Medium gray for placeholders */
+}
+
+/* Ensure all text in SimpleStudyView is readable for light theme */
+[data-theme="light"] .bg-black.text-white,
+[data-theme="light"] .bg-black * {
+  color: #1a202c !important; /* Dark text on white background */
+}
+
+[data-theme="light"] .text-gray-500 {
+  color: #4a5568 !important; /* Darker gray for light theme */
+}
+
+/* Ensure table cells have readable text in light theme */
+[data-theme="light"] table td {
+  color: #1a202c !important; /* Dark text */
+}
+
+[data-theme="light"] table td.text-gray-500 {
+  color: #4a5568 !important; /* Darker gray */
+}
+
+/* Ensure buttons and links are readable in light theme */
+[data-theme="light"] .text-primary-light,
+[data-theme="light"] a.text-primary-light {
+  color: #0944b3 !important; /* Dark blue for links */
+}
+
+[data-theme="light"] .text-primary-active,
+[data-theme="light"] a.text-primary-active,
+[data-theme="light"] a:hover.text-primary-active {
+  color: #1a5fd6 !important; /* Darker blue for hover */
+}
+
+/* Ensure study list container text is readable */
+[data-theme="light"] .bg-black,
+[data-theme="light"] .bg-black *:not(svg):not(svg *) {
+  color: #1a202c !important; /* Dark text on white background */
+  background-color: #ffffff !important; /* White background instead of black */
+}
+
+/* Ensure pagination section is white in light theme */
+[data-theme="light"] .bg-black.py-10,
+[data-theme="light"] .bg-black[class*="pagination"] {
+  background-color: #ffffff !important;
+  color: #1a202c !important;
+}
+
+/* Override react-select styles for light theme */
+[data-theme="light"] .customSelect__control {
+  background-color: #ffffff !important;
+  color: #1a202c !important;
+  border-color: #cbd5e0 !important;
+}
+
+[data-theme="light"] .customSelect__control:hover {
+  border-color: #a0aec0 !important;
+}
+
+[data-theme="light"] .customSelect__single-value,
+[data-theme="light"] .customSelect__placeholder,
+[data-theme="light"] .customSelect__input-container {
+  color: #1a202c !important;
+}
+
+[data-theme="light"] .customSelect__menu {
+  background-color: #ffffff !important;
+  border-color: #cbd5e0 !important;
+}
+
+[data-theme="light"] .customSelect__option {
+  background-color: #ffffff !important;
+  color: #1a202c !important;
+}
+
+[data-theme="light"] .customSelect__option:hover,
+[data-theme="light"] .customSelect__option--is-focused {
+  background-color: #edf2f7 !important;
+  color: #1a202c !important;
+}
+
+[data-theme="light"] .customSelect__option--is-selected {
+  background-color: #cbd5e0 !important;
+  color: #1a202c !important;
+}
+
+[data-theme="light"] .customSelect__indicator-separator {
+  background-color: #cbd5e0 !important;
+}
+
+[data-theme="light"] .customSelect__dropdown-indicator {
+  color: #1a202c !important;
+}
+
+/* Ensure filter bar labels are readable in light theme */
+/* Filter bar should have dark background with white text in light theme */
+[data-theme="light"] .bg-secondary-dark,
+[data-theme="light"] .bg-secondary-main {
+  background-color: #718096 !important; /* Dark gray for filter bar */
+}
+
+[data-theme="light"] .bg-secondary-dark .text-white,
+[data-theme="light"] .bg-secondary-main .text-white,
+[data-theme="light"] .bg-secondary-dark label,
+[data-theme="light"] .bg-secondary-main label,
+[data-theme="light"] .bg-secondary-dark p,
+[data-theme="light"] .bg-secondary-main p {
+  color: #ffffff !important; /* White text on dark gray filter bar */
+}
+
+/* Override StudyListFilter specific classes for light theme */
+[data-theme="light"] .bg-primary-dark {
+  background-color: #718096 !important; /* Dark gray for filter bar */
+  color: #ffffff !important;
+}
+
+[data-theme="light"] .bg-primary-dark .text-white,
+[data-theme="light"] .bg-primary-dark label,
+[data-theme="light"] .bg-primary-dark p {
+  color: #ffffff !important; /* White text on dark gray filter bar */
+}
+
+[data-theme="light"] .bg-primary-main {
+  background-color: #0944b3 !important; /* Blue for info messages */
+  color: #ffffff !important;
+}
+
+[data-theme="light"] .bg-primary-main .text-white,
+[data-theme="light"] .bg-primary-main p {
+  color: #ffffff !important; /* White text on blue background */
+}
+
+[data-theme="green"] input::placeholder,
+[data-theme="green"] input::-webkit-input-placeholder {
+  color: #86efac !important;
+}

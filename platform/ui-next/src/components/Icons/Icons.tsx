@@ -72,6 +72,7 @@ import LaunchArrow from './Sources/LaunchArrow';
 import LaunchInfo from './Sources/LaunchInfo';
 import GroupLayers from './Sources/GroupLayers';
 import Database from './Sources/Database';
+import Document from './Sources/Document';
 import InvestigationalUse from './Sources/InvestigationalUse';
 import IconTransferring from './Sources/IconTransferring';
 import Alert from './Sources/Alert';
@@ -682,6 +683,7 @@ export const Icons = {
   'status-untracked': (props: IconProps) => StatusUntracked(props),
   'status-locked': (props: IconProps) => StatusLocked(props),
   'lock': (props: IconProps) => Lock(props),
+  'color-change': (props: IconProps) => ColorChange(props),
   'tab-contours': (props: IconProps) => TabContours(props),
   TabContours: (props: IconProps) => TabContours(props),
   'tab-segmentation': (props: IconProps) => TabSegmentation(props),
@@ -760,6 +762,7 @@ export const Icons = {
   'upload-file': (props: IconProps) => UploadFile(props),
   'upload-folder': (props: IconProps) => UploadFolder(props),
   database: (props: IconProps) => Database(props),
+  document: (props: IconProps) => Document(props),
   'notifications-info': (props: IconProps) => NotificationInfo(props),
   'notificationwarning-diamond': (props: IconProps) => NotificationWarning(props),
   'content-prev': (props: IconProps) => ContentPrev(props),

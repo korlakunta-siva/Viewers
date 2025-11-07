@@ -29,10 +29,10 @@ module.exports = {
       },
 
       primary: {
-        light: '#5acce6',
-        main: '#0944b3',
-        dark: '#090c29',
-        active: '#348cfd',
+        light: 'var(--primary-light, #5acce6)',
+        main: 'var(--primary-main, #0944b3)',
+        dark: 'var(--primary-dark, #090c29)',
+        active: 'var(--primary-active, #348cfd)',
       },
       inputfield: {
         main: '#3a3f99',
@@ -42,10 +42,10 @@ module.exports = {
       },
 
       secondary: {
-        light: '#3a3f99',
-        main: '#2b166b',
-        dark: '#041c4a',
-        active: '#1f1f27',
+        light: 'var(--secondary-light, #3a3f99)',
+        main: 'var(--secondary-main, #2b166b)',
+        dark: 'var(--secondary-dark, #041c4a)',
+        active: 'var(--secondary-active, #1f1f27)',
       },
 
       indigo: {
@@ -53,16 +53,16 @@ module.exports = {
       },
 
       common: {
-        bright: '#e1e1e1',
-        light: '#a19fad',
-        main: '#fff',
-        dark: '#726f7e',
-        active: '#2c3074',
+        bright: 'var(--common-bright, #e1e1e1)',
+        light: 'var(--common-light, #a19fad)',
+        main: 'var(--common-main, #fff)',
+        dark: 'var(--common-dark, #726f7e)',
+        active: 'var(--common-active, #2c3074)',
       },
       bkg: {
-        low: '#050615',
-        med: '#090C29',
-        full: '#041C4A',
+        low: 'var(--bkg-low, #050615)',
+        med: 'var(--bkg-med, #090C29)',
+        full: 'var(--bkg-full, #041C4A)',
       },
       info: {
         primary: '#FFFFFF',

@@ -41,7 +41,9 @@
     "test:e2e:serve": "cross-env APP_CONFIG=config/e2e.js yarn start",
     "test:unit": "jest --watchAll",
     "test:unit:ci": "jest --ci --runInBand --collectCoverage",
-    "ci:generateSuccessVersion": "node -p -e \"require('./package.json').version\" > success_version.txt"
+    "ci:generateSuccessVersion": "node -p -e \"require('./package.json').version\" > success_version.txt",
+    "generate:help-pdf": "node scripts/generateHelpPdf.js",
+    "prebuild": "yarn run generate:help-pdf"
   },
   "files": [
     "dist",
@@ -117,6 +119,7 @@
     "html-webpack-plugin": "5.6.3",
     "identity-obj-proxy": "3.0.x",
     "mini-css-extract-plugin": "2.9.2",
+    "pdfkit": "0.15.0",
     "shx": "0.3.4",
     "tailwindcss": "3.2.4",
     "terser-webpack-plugin": "5.3.14",
