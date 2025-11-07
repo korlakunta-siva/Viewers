@@ -8,6 +8,10 @@ window.config = {
   modes: [],
   customizationService: {},
   showStudyList: true,
+  // AppEntry: 'local' or 'localonly' to redirect to /local on app load
+  // 'localonly' also hides the WorkList (study list) route - useful for patient CD viewers
+  // If missing or other value, defaults to / (study list)
+  AppEntry: 'localonly',
   // some windows systems have issues with more than 3 web workers
   maxNumberOfWebWorkers: 3,
   // below flag is for performance reasons, but it might not work for all servers

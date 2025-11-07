@@ -155,6 +155,7 @@ function App({
     hotkeysManager,
     routerBasename,
     showStudyList,
+    appConfig: appConfigState,
   });
 
   if (oidc) {

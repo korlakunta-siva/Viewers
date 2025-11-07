@@ -21,6 +21,7 @@ import {
   Button,
   ButtonEnums,
 } from '@ohif/ui';
+import SimpleStudyView from './SimpleStudyView';
 
 import {
   Header,
@@ -581,11 +582,10 @@ function WorkList({
           </div>
           {hasStudies ? (
             <div className="flex grow flex-col">
-              <StudyListTable
-                tableDataSource={tableDataSource.slice(offset, offsetAndTake)}
-                numOfStudies={numOfStudies}
-                querying={querying}
-                filtersMeta={filtersMeta}
+              <SimpleStudyView
+                studies={sortedStudies.slice(offset, offsetAndTake)}
+                dataPath={dataPath}
+                filterValues={filterValues}
               />
               <div className="grow">
                 <StudyListPagination

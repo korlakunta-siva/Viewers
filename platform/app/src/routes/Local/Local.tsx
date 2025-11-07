@@ -102,11 +102,13 @@ function Local({ modePath }: LocalProps) {
       }
     }
 
-    // Todo: navigate to work list and let user select a mode
+    // Navigate to viewer mode
+    // If modePath is empty, default to 'basic' viewer (for localonly mode compatibility)
+    const targetMode = modePath || 'basic';
     studies.forEach(id => query.append('StudyInstanceUIDs', id));
     query.append('datasources', 'dicomlocal');
 
-    navigate(`/${modePath}?${decodeURIComponent(query.toString())}`);
+    navigate(`/${targetMode}?${decodeURIComponent(query.toString())}`);
   };
 
   // Set body style

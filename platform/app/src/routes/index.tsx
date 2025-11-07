@@ -8,6 +8,7 @@ import WorkList from './WorkList';
 import Local from './Local';
 import Debug from './Debug';
 import NotFound from './NotFound';
+import AppEntryRedirect from './AppEntryRedirect';
 import buildModeRoutes from './buildModeRoutes';
 import PrivateRoute from './PrivateRoute';
 import PropTypes from 'prop-types';
@@ -90,6 +91,7 @@ const createRoutes = ({
   commandsManager,
   hotkeysManager,
   showStudyList,
+  appConfig,
 }: withAppTypes) => {
   const routes =
     buildModeRoutes({
@@ -110,6 +112,13 @@ const createRoutes = ({
 
   console.log('Registering worklist route', routerBasename, path);
 
+  // Get AppEntry config to determine if we should hide the study list
+  const appEntry = appConfig?.AppEntry;
+  const isLocalOnly = appEntry === 'localonly';
+
+  // Hide WorkList route if AppEntry is "localonly"
+  const shouldShowStudyList = showStudyList && !isLocalOnly;
+
   const WorkListRoute = {
     path: '/',
     children: DataSourceWrapper,
@@ -121,7 +130,7 @@ const createRoutes = ({
 
   const allRoutes = [
     ...routes,
-    ...(showStudyList ? [WorkListRoute] : []),
+    ...(shouldShowStudyList ? [WorkListRoute] : []),
     ...(customRoutes?.routes || []),
     ...bakedInRoutes,
     customRoutes?.notFoundRoute || notFoundRoute,
@@ -157,8 +166,10 @@ const createRoutes = ({
   // to check if it is enabled or not
   // Todo: I think we can remove the second public return below
   return (
-    <Routes>
-      {allRoutes.map((route, i) => {
+    <>
+      <AppEntryRedirect />
+      <Routes>
+        {allRoutes.map((route, i) => {
         return route.private === true ? (
           <Route
             key={i}
@@ -179,7 +190,8 @@ const createRoutes = ({
           />
         );
       })}
-    </Routes>
+      </Routes>
+    </>
   );
 };
 
