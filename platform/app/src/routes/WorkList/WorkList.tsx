@@ -37,6 +37,7 @@ import {
   Onboarding,
   ScrollArea,
   InvestigationalUseDialog,
+  LoadingIndicatorTotalPercent,
 } from '@ohif/ui-next';
 
 import { Types } from '@ohif/ui';
@@ -71,6 +72,7 @@ function WorkList({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ loaded: 0, total: 0 });
   // ~ Filters
   const searchParams = useSearchParams();
   const navigate = useNavigate();
@@ -528,9 +530,16 @@ function WorkList({
     if (!files || files.length === 0 || !localDataSourceRef.current) return;
 
     setIsUploading(true);
+    setUploadProgress({ loaded: 0, total: files.length });
+
     try {
       const fileArray = Array.from(files);
-      const studies = await filesToStudies(fileArray, localDataSourceRef.current);
+
+      const progressCallback = (loaded, total) => {
+        setUploadProgress({ loaded, total });
+      };
+
+      const studies = await filesToStudies(fileArray, localDataSourceRef.current, progressCallback);
 
       const query = new URLSearchParams();
       studies.forEach(id => query.append('StudyInstanceUIDs', id));
@@ -547,6 +556,7 @@ function WorkList({
       console.error('Error uploading files:', error);
     } finally {
       setIsUploading(false);
+      setUploadProgress({ loaded: 0, total: 0 });
     }
   };
 
@@ -698,6 +708,23 @@ function WorkList({
         WhiteLabeling={appConfig.whiteLabeling}
         showPatientInfo={PatientInfoVisibility.DISABLED}
       />
+      {isUploading && uploadProgress.total > 0 && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black">
+          <div className="bg-secondary-dark rounded-lg p-8 min-w-[400px]">
+            <LoadingIndicatorTotalPercent
+              className={'h-full w-full'}
+              totalNumbers={uploadProgress.total}
+              percentComplete={
+                uploadProgress.total > 0
+                  ? Math.round((uploadProgress.loaded / uploadProgress.total) * 100)
+                  : 0
+              }
+              loadingText="Uploading DICOM files..."
+              targetText="files"
+            />
+          </div>
+        </div>
+      )}
       <Onboarding />
       <InvestigationalUseDialog dialogConfiguration={appConfig?.investigationalUseDialog} />
       <div className="flex h-full flex-col overflow-y-auto">
@@ -738,9 +765,9 @@ function WorkList({
             <div className="flex flex-col items-center justify-center pt-48">
               {appConfig.showLoadingIndicator && isLoadingData ? (
                 <LoadingIndicatorProgress className={'h-full w-full bg-black'} />
-              ) : (
+              ) : !isUploading ? (
                 <EmptyStudies />
-              )}
+              ) : null}
             </div>
           )}
         </ScrollArea>

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import classnames from 'classnames';
 import { useNavigate } from 'react-router-dom';
 import { DicomMetadataStore, MODULE_TYPES, useSystem } from '@ohif/core';
@@ -8,7 +8,7 @@ import filesToStudies from './filesToStudies';
 
 import { extensionManager } from '../../App';
 
-import { Button, Icons } from '@ohif/ui-next';
+import { Button, Icons, LoadingIndicatorTotalPercent } from '@ohif/ui-next';
 
 const getLoadButton = (onDrop, text, isDir) => {
   return (
@@ -54,7 +54,8 @@ function Local({ modePath }: LocalProps) {
   const { customizationService } = servicesManager.services;
   const navigate = useNavigate();
   const dropzoneRef = useRef();
-  const [dropInitiated, setDropInitiated] = React.useState(false);
+  const [dropInitiated, setDropInitiated] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState({ loaded: 0, total: 0 });
 
   const LoadingIndicatorProgress = customizationService.getCustomization(
     'ui.loadingIndicatorProgress'
@@ -80,7 +81,14 @@ function Local({ modePath }: LocalProps) {
   );
 
   const onDrop = async acceptedFiles => {
-    const studies = await filesToStudies(acceptedFiles, dataSource);
+    setDropInitiated(true);
+    setLoadingProgress({ loaded: 0, total: acceptedFiles.length });
+
+    const progressCallback = (loaded, total) => {
+      setLoadingProgress({ loaded, total });
+    };
+
+    const studies = await filesToStudies(acceptedFiles, dataSource, progressCallback);
 
     const query = new URLSearchParams();
 
@@ -128,10 +136,7 @@ function Local({ modePath }: LocalProps) {
   return (
     <Dropzone
       ref={dropzoneRef}
-      onDrop={acceptedFiles => {
-        setDropInitiated(true);
-        onDrop(acceptedFiles);
-      }}
+      onDrop={onDrop}
       noClick
     >
       {({ getRootProps }) => (
@@ -154,7 +159,21 @@ function Local({ modePath }: LocalProps) {
               <div className="space-y-2 py-6 text-center">
                 {dropInitiated ? (
                   <div className="flex flex-col items-center justify-center pt-12">
-                    <LoadingIndicatorProgress className={'h-full w-full bg-black'} />
+                    {loadingProgress.total > 0 ? (
+                      <LoadingIndicatorTotalPercent
+                        className={'h-full w-full bg-black'}
+                        totalNumbers={loadingProgress.total}
+                        percentComplete={
+                          loadingProgress.total > 0
+                            ? Math.round((loadingProgress.loaded / loadingProgress.total) * 100)
+                            : 0
+                        }
+                        loadingText="Loading DICOM files..."
+                        targetText="files"
+                      />
+                    ) : (
+                      <LoadingIndicatorProgress className={'h-full w-full bg-black'} />
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-2">

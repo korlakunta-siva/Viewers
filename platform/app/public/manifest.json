@@ -1,11 +1,16 @@
 {
-  "name": "Apex Viewer",
+  "name": "Apex Medical Image Viewer",
   "short_name": "Apex Viewer",
-  "description": "Apex Viewer",
+  "description": "Apex Medical Image Viewer",
   "dir": "auto",
   "lang": "en-US",
   "orientation": "any",
   "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    },
     {
       "src": "/assets/android-chrome-36x36.png",
       "sizes": "36x36",

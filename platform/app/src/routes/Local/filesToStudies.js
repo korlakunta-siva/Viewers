@@ -1,7 +1,7 @@
 import FileLoaderService from './fileLoaderService';
 import { DicomMetadataStore } from '@ohif/core';
 
-const processFile = async file => {
+const processFile = async (file, onProgress) => {
   try {
     const fileLoaderService = new FileLoaderService(file);
     const imageId = fileLoaderService.addFile(file);
@@ -9,14 +9,43 @@ const processFile = async file => {
     const dicomJSONDataset = await fileLoaderService.getDataset(image, imageId);
 
     DicomMetadataStore.addInstance(dicomJSONDataset);
+
+    // Call progress callback if provided
+    if (onProgress) {
+      onProgress();
+    }
   } catch (error) {
     console.log(error.name, ':Error when trying to load and process local files:', error.message);
+    // Still call progress callback even on error to maintain count
+    if (onProgress) {
+      onProgress();
+    }
   }
 };
 
-export default async function filesToStudies(files) {
-  const processFilesPromises = files.map(processFile);
-  await Promise.all(processFilesPromises);
+export default async function filesToStudies(files, dataSource = null, onProgress = null) {
+  const totalFiles = files.length;
+  let processedCount = 0;
+
+  // Create progress callback if onProgress is provided
+  const progressCallback = onProgress
+    ? () => {
+        processedCount++;
+        onProgress(processedCount, totalFiles);
+      }
+    : null;
+
+  // Process files sequentially to show progress, or in parallel if no progress callback
+  if (progressCallback) {
+    // Process sequentially to show accurate progress
+    for (const file of files) {
+      await processFile(file, progressCallback);
+    }
+  } else {
+    // Process in parallel if no progress tracking needed
+    const processFilesPromises = files.map(file => processFile(file, null));
+    await Promise.all(processFilesPromises);
+  }
 
   return DicomMetadataStore.getStudyInstanceUIDs();
 }
