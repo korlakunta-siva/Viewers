@@ -681,6 +681,7 @@ export const Icons = {
   'status-tracked': (props: IconProps) => StatusTracking(props),
   'status-untracked': (props: IconProps) => StatusUntracked(props),
   'status-locked': (props: IconProps) => StatusLocked(props),
+  'lock': (props: IconProps) => Lock(props),
   'tab-contours': (props: IconProps) => TabContours(props),
   TabContours: (props: IconProps) => TabContours(props),
   'tab-segmentation': (props: IconProps) => TabSegmentation(props),

@@ -13,6 +13,9 @@ import { useDebounce, useSearchParams } from '../../hooks';
 import { utils, Types as coreTypes, DicomMetadataStore, MODULE_TYPES } from '@ohif/core';
 import { extensionManager } from '../../App';
 import filesToStudies from '../Local/filesToStudies';
+import { loadFilesFromEncryptedZip } from '../Local/encryptedZipLoader';
+import EncryptedZipPasswordDialog from '../Local/EncryptedZipPasswordDialog';
+import ExtractDicomDialog from '../Local/ExtractDicomDialog';
 
 import {
   StudyListExpandedRow,
@@ -73,6 +76,9 @@ function WorkList({
   const folderInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ loaded: 0, total: 0 });
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [pendingZipFile, setPendingZipFile] = useState<File | null>(null);
+  const [showExtractDialog, setShowExtractDialog] = useState(false);
   // ~ Filters
   const searchParams = useSearchParams();
   const navigate = useNavigate();
@@ -486,6 +492,9 @@ function WorkList({
   const AboutModal = customizationService.getCustomization(
     'ohif.aboutModal'
   ) as coreTypes.MenuComponentCustomization;
+  const HelpModal = customizationService.getCustomization(
+    'ohif.helpModal'
+  ) as coreTypes.MenuComponentCustomization;
   const UserPreferencesModal = customizationService.getCustomization(
     'ohif.userPreferencesModal'
   ) as coreTypes.MenuComponentCustomization;
@@ -584,8 +593,82 @@ function WorkList({
     }
   };
 
+  // Handle encrypted ZIP upload
+  const handleEncryptedZipClick = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.zip,application/zip,application/x-zip-compressed';
+    input.onchange = (e: any) => {
+      const files = e.target.files;
+      if (files && files.length > 0) {
+        setPendingZipFile(files[0]);
+        setShowPasswordDialog(true);
+      }
+    };
+    input.click();
+  };
+
+  const handleEncryptedZipPassword = async (password: string) => {
+    if (!pendingZipFile || !localDataSourceRef.current) return;
+
+    setShowPasswordDialog(false);
+    setIsUploading(true);
+    setUploadProgress({ loaded: 0, total: 0 });
+
+    try {
+      const progressCallback = (loaded, total) => {
+        setUploadProgress({ loaded, total });
+      };
+
+      // Extract files from encrypted ZIP in memory
+      const files = await loadFilesFromEncryptedZip(pendingZipFile, password, progressCallback);
+
+      if (files.length === 0) {
+        throw new Error('No DICOM files found in the ZIP archive');
+      }
+
+      // Process extracted files
+      const studies = await filesToStudies(files, localDataSourceRef.current, progressCallback);
+
+      const query = new URLSearchParams();
+      studies.forEach(id => query.append('StudyInstanceUIDs', id));
+      query.append('datasources', 'dicomlocal');
+
+      // Navigate to worklist with the new studies
+      navigate(`/?${decodeURIComponent(query.toString())}`);
+
+      // Refresh the study list
+      if (onRefresh) {
+        onRefresh();
+      }
+    } catch (error: any) {
+      console.error('Error loading encrypted ZIP:', error);
+      alert(`Error: ${error.message || 'Failed to load encrypted ZIP file'}`);
+    } finally {
+      setIsUploading(false);
+      setUploadProgress({ loaded: 0, total: 0 });
+      setPendingZipFile(null);
+    }
+  };
+
+  const handlePasswordCancel = () => {
+    setShowPasswordDialog(false);
+    setPendingZipFile(null);
+  };
+
   // Action items for direct icons in app bar (with tooltips)
   const actionItems = [
+    {
+      title: t('Header:Help') || 'Help',
+      icon: 'info',
+      tooltip: t('Header:Help') || 'Help',
+      onClick: () =>
+        show({
+          content: HelpModal,
+          title: HelpModal?.title ?? (t('Header:Help') || 'User Manual'),
+          containerClassName: HelpModal?.containerClassName ?? 'max-w-4xl',
+        }),
+    },
     {
       title: t('Header:Upload File') || 'Upload File',
       icon: 'upload-file',
@@ -597,6 +680,12 @@ function WorkList({
       icon: 'upload-folder',
       tooltip: t('Header:Upload Folder') || 'Upload Folder',
       onClick: handleUploadFolderClick,
+    },
+    {
+      title: t('Header:Upload Encrypted ZIP') || 'Upload Encrypted ZIP',
+      icon: 'lock',
+      tooltip: t('Header:Upload Encrypted ZIP') || 'Upload Encrypted ZIP',
+      onClick: handleEncryptedZipClick,
     },
   ];
 
@@ -611,6 +700,26 @@ function WorkList({
       title: t('Header:Upload Folder') || 'Upload Folder',
       icon: 'upload-folder',
       onClick: handleUploadFolderClick,
+    },
+    {
+      title: t('Header:Upload Encrypted ZIP') || 'Upload Encrypted ZIP',
+      icon: 'lock',
+      onClick: handleEncryptedZipClick,
+    },
+    {
+      title: t('Header:Extract DICOM from Encrypted ZIP') || 'Extract DICOM from Encrypted ZIP',
+      icon: 'download',
+      onClick: () => setShowExtractDialog(true),
+    },
+    {
+      title: HelpModal?.menuTitle ?? (t('Header:Help') || 'Help'),
+      icon: 'info',
+      onClick: () =>
+        show({
+          content: HelpModal,
+          title: HelpModal?.title ?? (t('Header:Help') || 'User Manual'),
+          containerClassName: HelpModal?.containerClassName ?? 'max-w-4xl',
+        }),
     },
     {
       title: AboutModal?.menuTitle ?? t('Header:About'),
@@ -725,6 +834,17 @@ function WorkList({
           </div>
         </div>
       )}
+      <EncryptedZipPasswordDialog
+        isOpen={showPasswordDialog}
+        onPasswordEntered={handleEncryptedZipPassword}
+        onCancel={handlePasswordCancel}
+        title="Encrypted ZIP File"
+        message="Enter password to access encrypted DICOM files:"
+      />
+      <ExtractDicomDialog
+        isOpen={showExtractDialog}
+        onClose={() => setShowExtractDialog(false)}
+      />
       <Onboarding />
       <InvestigationalUseDialog dialogConfiguration={appConfig?.investigationalUseDialog} />
       <div className="flex h-full flex-col overflow-y-auto">

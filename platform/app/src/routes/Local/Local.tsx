@@ -5,6 +5,8 @@ import { DicomMetadataStore, MODULE_TYPES, useSystem } from '@ohif/core';
 
 import Dropzone from 'react-dropzone';
 import filesToStudies from './filesToStudies';
+import { loadFilesFromEncryptedZip, extractEncryptedZipForDownload } from './encryptedZipLoader';
+import EncryptedZipPasswordDialog from './EncryptedZipPasswordDialog';
 
 import { extensionManager } from '../../App';
 
@@ -45,6 +47,18 @@ const getLoadButton = (onDrop, text, isDir) => {
   );
 };
 
+const getEncryptedZipButton = (onClick) => {
+  return (
+    <Button
+      variant="default"
+      className="w-40"
+      onClick={onClick}
+    >
+      Load Encrypted ZIP
+    </Button>
+  );
+};
+
 type LocalProps = {
   modePath: string;
 };
@@ -56,6 +70,10 @@ function Local({ modePath }: LocalProps) {
   const dropzoneRef = useRef();
   const [dropInitiated, setDropInitiated] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState({ loaded: 0, total: 0 });
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [pendingZipFile, setPendingZipFile] = useState<File | null>(null);
+  const [zipPassword, setZipPassword] = useState<string | null>(null);
+  const [isExtractingForDownload, setIsExtractingForDownload] = useState(false);
 
   const LoadingIndicatorProgress = customizationService.getCustomization(
     'ui.loadingIndicatorProgress'
@@ -80,22 +98,50 @@ function Local({ modePath }: LocalProps) {
     '@ohif/extension-dicom-microscopy'
   );
 
-  const onDrop = async acceptedFiles => {
-    setDropInitiated(true);
-    setLoadingProgress({ loaded: 0, total: acceptedFiles.length });
+  // Check if file is a ZIP file
+  const isZipFile = (file: File): boolean => {
+    return (
+      file.name.toLowerCase().endsWith('.zip') ||
+      file.type === 'application/zip' ||
+      file.type === 'application/x-zip-compressed'
+    );
+  };
 
-    const progressCallback = (loaded, total) => {
-      setLoadingProgress({ loaded, total });
-    };
+  // Handle encrypted ZIP file
+  const handleEncryptedZip = async (zipFile: File, password: string) => {
+    try {
+      setDropInitiated(true);
+      setLoadingProgress({ loaded: 0, total: 0 });
 
-    const studies = await filesToStudies(acceptedFiles, dataSource, progressCallback);
+      const progressCallback = (loaded, total) => {
+        setLoadingProgress({ loaded, total });
+      };
 
+      // Extract files from encrypted ZIP in memory
+      const files = await loadFilesFromEncryptedZip(zipFile, password, progressCallback);
+
+      if (files.length === 0) {
+        throw new Error('No DICOM files found in the ZIP archive');
+      }
+
+      // Process extracted files
+      const studies = await filesToStudies(files, dataSource, progressCallback);
+
+      // Navigate to viewer
+      navigateToViewer(studies);
+    } catch (error) {
+      console.error('Error loading encrypted ZIP:', error);
+      alert(`Error: ${error.message || 'Failed to load encrypted ZIP file'}`);
+      setDropInitiated(false);
+      setLoadingProgress({ loaded: 0, total: 0 });
+    }
+  };
+
+  // Navigate to viewer after loading studies
+  const navigateToViewer = (studies: string[]) => {
     const query = new URLSearchParams();
 
     if (microscopyExtensionLoaded) {
-      // TODO: for microscopy, we are forcing microscopy mode, which is not ideal.
-      //     we should make the local drag and drop navigate to the worklist and
-      //     there user can select microscopy mode
       const smStudies = studies.filter(id => {
         const study = DicomMetadataStore.getStudy(id);
         return (
@@ -105,24 +151,177 @@ function Local({ modePath }: LocalProps) {
 
       if (smStudies.length > 0) {
         smStudies.forEach(id => query.append('StudyInstanceUIDs', id));
-
         modePath = 'microscopy';
       }
     }
 
-    // Navigate to viewer mode or worklist
-    // If modePath is empty, navigate to worklist (/) to let user select a study
-    // Otherwise navigate to the specified viewer mode
     studies.forEach(id => query.append('StudyInstanceUIDs', id));
     query.append('datasources', 'dicomlocal');
 
     if (modePath) {
-      // Navigate to specific viewer mode (e.g., 'viewer/dicomlocal' or 'microscopy')
       navigate(`/${modePath}?${decodeURIComponent(query.toString())}`);
     } else {
-      // Navigate to worklist (study list) so user can select which study to view
       navigate(`/?${decodeURIComponent(query.toString())}`);
     }
+  };
+
+  // Handle download of unencrypted DICOM files
+  const handleDownloadDicom = async () => {
+    if (!pendingZipFile || !zipPassword) {
+      return;
+    }
+
+    try {
+      setIsExtractingForDownload(true);
+      setLoadingProgress({ loaded: 0, total: 0 });
+
+      const progressCallback = (loaded, total) => {
+        setLoadingProgress({ loaded, total });
+      };
+
+      // Extract all files from ZIP
+      const extractedFiles = await extractEncryptedZipForDownload(
+        pendingZipFile,
+        zipPassword,
+        progressCallback
+      );
+
+      // Use File System Access API if available (Chrome/Edge)
+      if ('showDirectoryPicker' in window) {
+        try {
+          const directoryHandle = await (window as any).showDirectoryPicker({
+            mode: 'readwrite',
+          });
+
+          // Create directory structure and save files
+          for (const [filePath, blob] of Object.entries(extractedFiles)) {
+            const pathParts = filePath.split('/').filter(p => p);
+            let currentHandle = directoryHandle;
+
+            // Navigate/create directory structure
+            for (let i = 0; i < pathParts.length - 1; i++) {
+              try {
+                currentHandle = await currentHandle.getDirectoryHandle(pathParts[i], {
+                  create: true,
+                });
+              } catch (e) {
+                console.warn(`Failed to create directory ${pathParts[i]}:`, e);
+              }
+            }
+
+            // Create file
+            const fileName = pathParts[pathParts.length - 1];
+            const fileHandle = await currentHandle.getFileHandle(fileName, { create: true });
+            const writable = await fileHandle.createWritable();
+            await writable.write(blob);
+            await writable.close();
+          }
+
+          alert('DICOM files extracted successfully!');
+        } catch (error: any) {
+          if (error.name !== 'AbortError') {
+            throw error;
+          }
+          // User cancelled
+        }
+      } else {
+        // Fallback: Use File System Access API or download individual files
+        // For browsers without directory picker support, we'll create a ZIP
+        try {
+          const zipJs = await import('@zip.js/zip.js');
+          const { ZipWriter, BlobWriter, BlobReader } = zipJs;
+
+          const zipWriter = new ZipWriter(new BlobWriter());
+
+          // Add all files to the new ZIP
+          for (const [filePath, blob] of Object.entries(extractedFiles)) {
+            await zipWriter.add(filePath, new BlobReader(blob));
+          }
+
+          // Generate the ZIP blob
+          const zipBlob = await zipWriter.close();
+
+          // Download the ZIP
+          const url = URL.createObjectURL(zipBlob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'dicom_extracted.zip';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+
+          alert('DICOM files packaged as ZIP. Please extract the ZIP file to access DICOM files.');
+        } catch (error) {
+          console.error('Error creating download ZIP:', error);
+          alert('Error creating download package. Please try using a modern browser (Chrome/Edge) for folder selection.');
+        }
+      }
+    } catch (error) {
+      console.error('Error downloading DICOM files:', error);
+      alert(`Error: ${error.message || 'Failed to extract DICOM files'}`);
+    } finally {
+      setIsExtractingForDownload(false);
+      setLoadingProgress({ loaded: 0, total: 0 });
+    }
+  };
+
+  // Handle encrypted ZIP button click
+  const handleEncryptedZipClick = () => {
+    // Create a hidden file input for ZIP files only
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.zip,application/zip,application/x-zip-compressed';
+    input.onchange = (e: any) => {
+      const files = e.target.files;
+      if (files && files.length > 0) {
+        setPendingZipFile(files[0]);
+        setShowPasswordDialog(true);
+      }
+    };
+    input.click();
+  };
+
+  const onDrop = async acceptedFiles => {
+    // Handle regular files (not ZIP)
+    // ZIP files should be loaded via the "Load Encrypted ZIP" button
+    const regularFiles = acceptedFiles.filter(f => !isZipFile(f));
+
+    if (regularFiles.length === 0) {
+      // If only ZIP files were dropped, prompt user to use the button instead
+      const zipFiles = acceptedFiles.filter(isZipFile);
+      if (zipFiles.length > 0) {
+        alert('Please use the "Load Encrypted ZIP" button to load password-protected ZIP files.');
+        return;
+      }
+      return;
+    }
+
+    // Handle regular files
+    setDropInitiated(true);
+    setLoadingProgress({ loaded: 0, total: regularFiles.length });
+
+    const progressCallback = (loaded, total) => {
+      setLoadingProgress({ loaded, total });
+    };
+
+    const studies = await filesToStudies(regularFiles, dataSource, progressCallback);
+    navigateToViewer(studies);
+  };
+
+  const handlePasswordSubmit = async (password: string) => {
+    setZipPassword(password);
+    setShowPasswordDialog(false);
+
+    if (pendingZipFile) {
+      await handleEncryptedZip(pendingZipFile, password);
+    }
+  };
+
+  const handlePasswordCancel = () => {
+    setShowPasswordDialog(false);
+    setPendingZipFile(null);
+    setZipPassword(null);
   };
 
   // Set body style
@@ -134,69 +333,94 @@ function Local({ modePath }: LocalProps) {
   }, []);
 
   return (
-    <Dropzone
-      ref={dropzoneRef}
-      onDrop={onDrop}
-      noClick
-    >
-      {({ getRootProps }) => (
-        <div
-          {...getRootProps()}
-          style={{ width: '100%', height: '100%' }}
-        >
-          <div className="flex h-screen w-screen items-center justify-center">
-            <div className="bg-muted border-primary/60 mx-auto space-y-2 rounded-xl border border-dashed py-12 px-12 drop-shadow-md">
-              <div className="flex items-center justify-center">
-                <div className="flex items-center gap-3">
-                  <img
-                    src="/assets/favicon.ico"
-                    alt="Apex Viewer"
-                    style={{ width: '72px', height: '72px' }}
-                  />
-                  <span className="text-white text-2xl font-medium">Apex Viewer</span>
+    <>
+      <Dropzone
+        ref={dropzoneRef}
+        onDrop={onDrop}
+        noClick
+      >
+        {({ getRootProps }) => (
+          <div
+            {...getRootProps()}
+            style={{ width: '100%', height: '100%' }}
+          >
+            <div className="flex h-screen w-screen items-center justify-center">
+              <div className="bg-muted border-primary/60 mx-auto space-y-2 rounded-xl border border-dashed py-12 px-12 drop-shadow-md">
+                <div className="flex items-center justify-center">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src="/assets/favicon.ico"
+                      alt="Apex Viewer"
+                      style={{ width: '72px', height: '72px' }}
+                    />
+                    <span className="text-white text-2xl font-medium">Apex Viewer</span>
+                  </div>
                 </div>
-              </div>
-              <div className="space-y-2 py-6 text-center">
-                {dropInitiated ? (
-                  <div className="flex flex-col items-center justify-center pt-12">
-                    {loadingProgress.total > 0 ? (
-                      <LoadingIndicatorTotalPercent
-                        className={'h-full w-full bg-black'}
-                        totalNumbers={loadingProgress.total}
-                        percentComplete={
-                          loadingProgress.total > 0
-                            ? Math.round((loadingProgress.loaded / loadingProgress.total) * 100)
-                            : 0
-                        }
-                        loadingText="Loading DICOM files..."
-                        targetText="files"
-                      />
-                    ) : (
-                      <LoadingIndicatorProgress className={'h-full w-full bg-black'} />
-                    )}
+                <div className="space-y-2 py-6 text-center">
+                  {dropInitiated ? (
+                    <div className="flex flex-col items-center justify-center pt-12">
+                      {loadingProgress.total > 0 ? (
+                        <LoadingIndicatorTotalPercent
+                          className={'h-full w-full bg-black'}
+                          totalNumbers={loadingProgress.total}
+                          percentComplete={
+                            loadingProgress.total > 0
+                              ? Math.round((loadingProgress.loaded / loadingProgress.total) * 100)
+                              : 0
+                          }
+                          loadingText="Loading DICOM files..."
+                          targetText="files"
+                        />
+                      ) : (
+                        <LoadingIndicatorProgress className={'h-full w-full bg-black'} />
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="text-primary pt-0 text-xl">
+                        Drag and drop your DICOM files & folders here <br />
+                        to load them locally.
+                      </p>
+                      <p className="text-muted-foreground text-base">
+                        Note: Your data remains locally within your browser
+                        <br /> and is never uploaded to any server.
+                      </p>
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col items-center gap-2 pt-4">
+                  <div className="flex justify-center gap-2">
+                    {getLoadButton(onDrop, 'Load files', false)}
+                    {getLoadButton(onDrop, 'Load folders', true)}
                   </div>
-                ) : (
-                  <div className="space-y-2">
-                    <p className="text-primary pt-0 text-xl">
-                      Drag and drop your DICOM files & folders here <br />
-                      to load them locally.
-                    </p>
-                    <p className="text-muted-foreground text-base">
-                      Note: Your data remains locally within your browser
-                      <br /> and is never uploaded to any server.
-                    </p>
+                  <div className="flex justify-center pt-2">
+                    {getEncryptedZipButton(handleEncryptedZipClick)}
                   </div>
-                )}
-              </div>
-              <div className="flex justify-center gap-2 pt-4">
-                {getLoadButton(onDrop, 'Load files', false)}
-                {getLoadButton(onDrop, 'Load folders', true)}
+                  {zipPassword && pendingZipFile && (
+                    <div className="flex justify-center pt-2">
+                      <Button
+                        variant="default"
+                        onClick={handleDownloadDicom}
+                        disabled={isExtractingForDownload}
+                      >
+                        {isExtractingForDownload ? 'Extracting...' : 'Download Unencrypted DICOM Files'}
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-    </Dropzone>
+        )}
+      </Dropzone>
+      <EncryptedZipPasswordDialog
+        isOpen={showPasswordDialog}
+        onPasswordEntered={handlePasswordSubmit}
+        onCancel={handlePasswordCancel}
+        title="Encrypted ZIP File Detected"
+        message="This ZIP file is password-protected. Enter the password to access DICOM files:"
+      />
+    </>
   );
 }
 

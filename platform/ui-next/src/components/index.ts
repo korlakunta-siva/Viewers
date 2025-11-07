@@ -57,7 +57,7 @@ import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './Tool
 import { ToolboxUI } from './OHIFToolbox';
 import Numeric from './Numeric';
 import { InputDialog, PresetDialog } from './OHIFDialogs';
-import { AboutModal, ImageModal, UserPreferencesModal } from './OHIFModals';
+import { AboutModal, HelpModal, ImageModal, UserPreferencesModal } from './OHIFModals';
 import Modal from './Modal/Modal';
 import { FooterAction } from './FooterAction';
 import { InputFilter } from './InputFilter';
@@ -256,6 +256,7 @@ export {
   PresetDialog,
   Modal,
   AboutModal,
+  HelpModal,
   ImageModal,
   UserPreferencesModal,
   FooterAction,

@@ -6,6 +6,9 @@
   "Preferences": "Preferences",
   "Study list": "Study list",
   "Logout": "Logout",
+  "Help": "Help",
   "Upload File": "Upload File",
-  "Upload Folder": "Upload Folder"
+  "Upload Folder": "Upload Folder",
+  "Upload Encrypted ZIP": "Upload Encrypted ZIP",
+  "Extract DICOM from Encrypted ZIP": "Extract DICOM from Encrypted ZIP"
 }

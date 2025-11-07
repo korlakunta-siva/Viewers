@@ -18,6 +18,7 @@ import progressLoadingBarCustomization from './customizations/progressLoadingBar
 import labellingFlowCustomization from './customizations/labellingFlowCustomization';
 import viewportNotificationCustomization from './customizations/notificationCustomization';
 import aboutModalCustomization from './customizations/aboutModalCustomization';
+import helpModalCustomization from './customizations/helpModalCustomization';
 import userPreferencesCustomization from './customizations/userPreferencesCustomization';
 import reportDialogCustomization from './customizations/reportDialogCustomization';
 import hotkeyBindingsCustomization from './customizations/hotkeyBindingsCustomization';
@@ -66,6 +67,7 @@ export default function getCustomizationModule({ servicesManager, extensionManag
         ...contextMenuUICustomization,
         ...viewportNotificationCustomization,
         ...aboutModalCustomization,
+        ...helpModalCustomization,
         ...userPreferencesCustomization,
         ...reportDialogCustomization,
         ...hotkeyBindingsCustomization,

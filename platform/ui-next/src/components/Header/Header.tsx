@@ -100,26 +100,31 @@ function Header({
               {/* Action items (direct icons) */}
               {actionItems.map((action, index) => {
                 return (
-                  <Tooltip key={index}>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-primary hover:bg-primary-dark mr-1 h-full"
-                        onClick={action.onClick}
-                        title={action.tooltip || action.title}
-                      >
-                        <Icons.ByName name={action.icon} />
-                      </Button>
-                    </TooltipTrigger>
-                    {action.tooltip && (
-                      <TooltipContent side="bottom">
-                        {action.tooltip}
-                      </TooltipContent>
-                    )}
-                  </Tooltip>
+                  <React.Fragment key={index}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-primary hover:bg-primary-dark mx-2 h-full"
+                          onClick={action.onClick}
+                          title={action.tooltip || action.title}
+                        >
+                          <Icons.ByName name={action.icon} />
+                        </Button>
+                      </TooltipTrigger>
+                      {action.tooltip && (
+                        <TooltipContent side="bottom">
+                          {action.tooltip}
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  </React.Fragment>
                 );
               })}
+              {actionItems.length > 0 && (
+                <div className="border-primary-dark mx-1.5 h-[25px] border-r"></div>
+              )}
               <div className="flex-shrink-0">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
