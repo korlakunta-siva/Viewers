@@ -14,7 +14,7 @@ export const UploadFolder = (props: IconProps) => (
   >
     {/* Folder icon base */}
     <path
-      d="M3 5a1 1 0 0 1 1-1h4l2 2h6a1 1 0 0 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5z"
+      d="M3 5a1 1 0 0 1 1 -1h4l2 2h6a1 1 0 0 1 1v9a1 1 0 0 1 -1 1H4a1 1 0 0 1 -1 -1V5z"
       stroke="currentColor"
       fill="none"
       strokeWidth="1.5"

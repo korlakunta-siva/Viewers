@@ -1,7 +1,7 @@
 /**
  * Encrypted ZIP Loader
- * Reads password-protected ZIP files and extracts DICOM files in memory
- * without storing them to disk
+ * Reads password-protected ZIP files and extracts DICOM files and PDF study reports
+ * in memory without storing them to disk
  *
  * Uses @zip.js/zip.js library which supports:
  * - ZipCrypto (traditional ZIP encryption - weaker but widely compatible)
@@ -38,8 +38,15 @@ async function zipEntryToFile(entry, password) {
     const pathParts = entry.filename.split('/');
     const simpleFilename = pathParts[pathParts.length - 1];
 
+    // Determine MIME type based on file extension
+    const filenameLower = simpleFilename.toLowerCase();
+    let mimeType = 'application/dicom'; // Default to DICOM
+    if (filenameLower.endsWith('.pdf')) {
+      mimeType = 'application/pdf';
+    }
+
     const file = new File([blob], simpleFilename, {
-      type: 'application/dicom', // Assuming DICOM, could be dynamic
+      type: mimeType,
       lastModified: entry.lastModDate ? entry.lastModDate.getTime() : Date.now(),
     });
 
@@ -85,30 +92,34 @@ export async function loadFilesFromEncryptedZip(zipFile, password, onProgress = 
       console.log(`Entry ${index}: ${entry.filename} (directory: ${entry.directory})`);
     });
 
-    // Filter for DICOM files only
+    // Filter for DICOM files and PDF files
     // DICOM files can have .dcm, .dicom extensions, or no extension
+    // PDF files are study reports that should be associated with studies
     // We'll check file extensions first, and if no matches, we'll try to process all non-directory files
     const dicomEntries = entries.filter(entry => {
       if (entry.directory) return false;
       const filename = entry.filename.toLowerCase();
       // Check for common DICOM extensions
-      return filename.endsWith('.dcm') ||
-             filename.endsWith('.dicom') ||
-             filename.endsWith('.dc3') ||
-             // If no extension, we'll include it (DICOM files sometimes have no extension)
-             (!filename.includes('.') && entry.filename.length > 0);
+      const isDicom = filename.endsWith('.dcm') ||
+                      filename.endsWith('.dicom') ||
+                      filename.endsWith('.dc3') ||
+                      // If no extension, we'll include it (DICOM files sometimes have no extension)
+                      (!filename.includes('.') && entry.filename.length > 0);
+      // Check for PDF files (study reports)
+      const isPdf = filename.endsWith('.pdf');
+      return isDicom || isPdf;
     });
 
-    console.log(`Files matching DICOM extensions: ${dicomEntries.length}`);
+    console.log(`Files matching DICOM/PDF extensions: ${dicomEntries.length}`);
     dicomEntries.forEach((entry, index) => {
-      console.log(`DICOM entry ${index}: ${entry.filename}`);
+      console.log(`Entry ${index}: ${entry.filename}`);
     });
 
     // If no files match the extension filter, try including all non-directory files
     // (DICOM files might not have extensions)
     let filesToProcess = dicomEntries;
     if (dicomEntries.length === 0) {
-      console.warn('No files with DICOM extensions found. Processing all non-directory files...');
+      console.warn('No files with DICOM/PDF extensions found. Processing all non-directory files...');
       filesToProcess = entries.filter(entry => !entry.directory);
       console.log(`Processing ${filesToProcess.length} non-directory files`);
     }

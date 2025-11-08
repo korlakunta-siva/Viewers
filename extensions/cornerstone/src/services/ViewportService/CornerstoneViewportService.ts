@@ -499,6 +499,12 @@ class CornerstoneViewportService extends PubSubService implements IViewportServi
 
   /**
    * Retrieves the Cornerstone viewport with the specified ID.
+   * Always returns a fresh viewport reference to avoid using stale references
+   * after viewport destruction/recreation.
+   *
+   * IMPORTANT: Always use this method to get viewport references instead of
+   * storing viewport references in variables or closures, as viewports can be
+   * destroyed and recreated with the same viewportId.
    *
    * @param viewportId - The ID of the viewport.
    * @returns The Cornerstone viewport object if found, otherwise null.
@@ -510,9 +516,24 @@ class CornerstoneViewportService extends PubSubService implements IViewportServi
       return null;
     }
 
-    const viewport = this.renderingEngine.getViewport(viewportId);
+    try {
+      // Always get a fresh viewport reference to avoid using stale references
+      // after viewport destruction/recreation. This is critical because viewports
+      // can be destroyed and recreated with the same viewportId.
+      const viewport = this.renderingEngine.getViewport(viewportId);
 
-    return viewport;
+      // Check if viewport exists
+      if (!viewport) {
+        return null;
+      }
+
+      return viewport;
+    } catch (error) {
+      // If getting the viewport fails (e.g., it was destroyed), return null
+      // This can happen if the viewport was destroyed between the check and the get
+      console.warn(`Failed to get viewport ${viewportId}, it may have been destroyed:`, error.message);
+      return null;
+    }
   }
 
   /**

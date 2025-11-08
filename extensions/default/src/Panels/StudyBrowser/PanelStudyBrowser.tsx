@@ -472,6 +472,19 @@ function _mapDataSourceStudies(studies) {
 function _mapDisplaySets(displaySets, displaySetLoadingState, thumbnailImageSrcMap, viewports) {
   const thumbnailDisplaySets = [];
   const thumbnailNoImageDisplaySets = [];
+
+  // Count display sets per series to determine if we need to show instance numbers
+  const seriesCountMap = new Map();
+  displaySets
+    .filter(ds => !ds.excludeFromThumbnailBrowser)
+    .forEach(ds => {
+      const seriesKey = `${ds.StudyInstanceUID}-${ds.SeriesNumber}`;
+      if (!seriesCountMap.has(seriesKey)) {
+        seriesCountMap.set(seriesKey, []);
+      }
+      seriesCountMap.get(seriesKey).push(ds);
+    });
+
   displaySets
     .filter(ds => !ds.excludeFromThumbnailBrowser)
     .forEach(ds => {
@@ -483,10 +496,24 @@ function _mapDisplaySets(displaySets, displaySetLoadingState, thumbnailImageSrcM
 
       const loadingProgress = displaySetLoadingState?.[displaySetInstanceUID];
 
+      // Get instance number from first instance
+      const firstInstance = ds.instances?.[0];
+      const instanceNumber = firstInstance?.InstanceNumber ?? '';
+
+      // Format series number: include instance number if there are multiple display sets for this series
+      const seriesKey = `${ds.StudyInstanceUID}-${ds.SeriesNumber}`;
+      const seriesDisplaySets = seriesCountMap.get(seriesKey) || [];
+      const hasMultipleDisplaySets = seriesDisplaySets.length > 1;
+
+      let formattedSeriesNumber = ds.SeriesNumber ?? '';
+      if (hasMultipleDisplaySets && instanceNumber) {
+        formattedSeriesNumber = `${ds.SeriesNumber}-${instanceNumber}`;
+      }
+
       array.push({
         displaySetInstanceUID,
         description: ds.SeriesDescription || '',
-        seriesNumber: ds.SeriesNumber,
+        seriesNumber: formattedSeriesNumber,
         modality: ds.Modality,
         seriesDate: formatDate(ds.SeriesDate),
         numInstances: ds.numImageFrames,

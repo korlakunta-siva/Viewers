@@ -1,3 +1,6 @@
+import React from 'react';
+import SeriesNavigationOverlay from '../Viewport/Overlays/SeriesNavigationOverlay';
+
 export default {
   'viewportOverlay.topLeft': [
     {
@@ -20,7 +23,18 @@ export default {
       contentF: ({ referenceInstance }) => referenceInstance.SeriesDescription,
     },
   ],
-  'viewportOverlay.topRight': [],
+  'viewportOverlay.topRight': [
+    {
+      id: 'SeriesNavigation',
+      contentF: ({ viewportId, servicesManager, viewportData }) => {
+        return React.createElement(SeriesNavigationOverlay, {
+          viewportId,
+          servicesManager,
+          viewportData,
+        });
+      },
+    },
+  ],
   'viewportOverlay.bottomLeft': [
     {
       id: 'WindowLevel',
