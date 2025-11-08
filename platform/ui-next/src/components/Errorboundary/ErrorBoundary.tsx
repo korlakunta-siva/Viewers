@@ -277,6 +277,14 @@ const ErrorBoundary = ({
     let errorTimeout: NodeJS.Timeout;
 
     const handleError = (event: ErrorEvent) => {
+      // Check if this is a viewport destroyed error - log to console but don't show UI
+      const errorMessage = event.error?.message || event.message || '';
+      if (errorMessage.includes('stack viewport has been destroyed') ||
+          errorMessage.includes('viewport has been destroyed')) {
+        console.warn('Viewport destroyed error (suppressed from UI):', event.error || event);
+        return; // Don't show error in UI, just log to console
+      }
+
       clearTimeout(errorTimeout);
       errorTimeout = setTimeout(() => {
         setError(event.error);
@@ -285,6 +293,15 @@ const ErrorBoundary = ({
     };
 
     const handleRejection = (event: PromiseRejectionEvent) => {
+      // Check if this is a viewport destroyed error - log to console but don't show UI
+      const errorMessage = event.reason?.message || (typeof event.reason === 'string' ? event.reason : '');
+      if (errorMessage.includes('stack viewport has been destroyed') ||
+          errorMessage.includes('viewport has been destroyed')) {
+        console.warn('Viewport destroyed error (suppressed from UI):', event.reason || event);
+        event.preventDefault();
+        return; // Don't show error in UI, just log to console
+      }
+
       event.preventDefault();
       clearTimeout(errorTimeout);
       errorTimeout = setTimeout(() => {
@@ -307,32 +324,57 @@ const ErrorBoundary = ({
     error: ErrorBoundaryError | ErrorEvent,
     componentStack: string | null
   ) => {
+    // Check if this is a viewport destroyed error - log to console but don't show UI
+    const errorMessage = error?.message || (typeof error === 'string' ? error : '');
+    if (errorMessage.includes('stack viewport has been destroyed') ||
+        errorMessage.includes('viewport has been destroyed')) {
+      console.warn('Viewport destroyed error (suppressed from UI):', error);
+      return; // Don't show error in UI, just log to console
+    }
+
     console.debug(`${context} Error Boundary`, error, componentStack, context);
     onError(error, componentStack || '', context);
   };
 
   return (
     <ReactErrorBoundary
-      fallbackRender={props => (
-        <FallbackComponent
-          {...props}
-          context={context}
-          showErrorDetails={showErrorDetails}
-        />
-      )}
+      fallbackRender={props => {
+        // Check if this is a viewport destroyed error - don't render fallback UI
+        const errorMessage = props.error?.message || '';
+        if (errorMessage.includes('stack viewport has been destroyed') ||
+            errorMessage.includes('viewport has been destroyed')) {
+          console.warn('Viewport destroyed error (suppressed from UI):', props.error);
+          return null; // Don't show error UI, just log to console
+        }
+        return (
+          <FallbackComponent
+            {...props}
+            context={context}
+            showErrorDetails={showErrorDetails}
+          />
+        );
+      }}
       onReset={onResetHandler}
       onError={(error, info) => onErrorHandler(error as ErrorBoundaryError, info.componentStack)}
     >
       <>
         {children}
-        {error && (
-          <FallbackComponent
-            error={error}
-            context={context}
-            resetErrorBoundary={() => setError(null)}
-            showErrorDetails={showErrorDetails}
-          />
-        )}
+        {error && (() => {
+          // Check if this is a viewport destroyed error - don't show UI
+          const errorMessage = error?.message || '';
+          if (errorMessage.includes('stack viewport has been destroyed') ||
+              errorMessage.includes('viewport has been destroyed')) {
+            return null; // Don't show error UI
+          }
+          return (
+            <FallbackComponent
+              error={error}
+              context={context}
+              resetErrorBoundary={() => setError(null)}
+              showErrorDetails={showErrorDetails}
+            />
+          );
+        })()}
       </>
     </ReactErrorBoundary>
   );

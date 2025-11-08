@@ -456,7 +456,7 @@ function WorkList({
                     {/* TODO revisit the completely rounded style of buttons used for launching a mode from the worklist later */}
                     <Button
                       type={ButtonEnums.type.primary}
-                      size={ButtonEnums.size.smallTall}
+                      size={ButtonEnums.size.small}
                       disabled={!isValidMode}
                       startIconTooltip={
                         !isValidMode ? (
@@ -474,7 +474,7 @@ function WorkList({
                       }
                       onClick={() => {}}
                       dataCY={`mode-${mode.routeName}-${studyInstanceUid}`}
-                      className={!isValidMode && 'bg-[#222d44]'}
+                      className={!isValidMode ? 'bg-[#222d44]' : ''}
                     >
                       {mode.displayName}
                     </Button>

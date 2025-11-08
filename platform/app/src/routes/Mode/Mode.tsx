@@ -75,10 +75,14 @@ export default function ModeRoute({
   }
 
   // An undefined dataSourceName implies that the active data source that is already set in the ExtensionManager should be used.
-  if (dataSourceName !== undefined) {
-    extensionManager.setActiveDataSource(dataSourceName);
-  }
+  // Move setActiveDataSource to useEffect to avoid updating state during render
+  useEffect(() => {
+    if (dataSourceName !== undefined) {
+      extensionManager.setActiveDataSource(dataSourceName);
+    }
+  }, [dataSourceName, extensionManager]);
 
+  // Get data source - this will be updated on next render after setActiveDataSource runs
   const dataSource = extensionManager.getActiveDataSourceOrNull();
 
   // Only handling one route per mode for now

@@ -5,6 +5,10 @@ const log = {
   trace: console.trace,
   debug: console.debug,
   time: key => {
+    // If timer already exists, end it first to avoid console warnings
+    if (log.timingKeys[key]) {
+      log.timeEnd(key);
+    }
     log.timingKeys[key] = true;
     console.time(key);
   },

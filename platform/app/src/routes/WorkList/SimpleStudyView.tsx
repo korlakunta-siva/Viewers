@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import moment from 'moment';
@@ -35,19 +35,6 @@ function SimpleStudyView({
   onPdfToggle
 }: SimpleStudyViewProps) {
   const { t } = useTranslation();
-  const [selectedStudies, setSelectedStudies] = useState<Set<string>>(new Set());
-
-  const handleCheckboxChange = (studyInstanceUid: string) => {
-    setSelectedStudies(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(studyInstanceUid)) {
-        newSet.delete(studyInstanceUid);
-      } else {
-        newSet.add(studyInstanceUid);
-      }
-      return newSet;
-    });
-  };
 
   const formatDate = (date: string, time?: string) => {
     if (!date) return '';
@@ -97,20 +84,6 @@ function SimpleStudyView({
         <table className="w-full table-fixed">
           <thead>
             <tr className="border-b border-secondary-light">
-              <th className="w-10 px-2 py-1.5 text-left text-sm font-semibold">
-                <input
-                  type="checkbox"
-                  checked={selectedStudies.size === studies.length && studies.length > 0}
-                  onChange={() => {
-                    if (selectedStudies.size === studies.length) {
-                      setSelectedStudies(new Set());
-                    } else {
-                      setSelectedStudies(new Set(studies.map(s => s.studyInstanceUid)));
-                    }
-                  }}
-                  className="mr-2"
-                />
-              </th>
               <th className="w-16 px-2 py-1.5 text-left text-sm font-semibold">{t('StudyList:Report') || 'Report'}</th>
               <th className="w-20 px-2 py-1.5 text-left text-sm font-semibold">{t('StudyList:View')}</th>
               <th className="w-48 px-2 py-1.5 text-left text-sm font-semibold">
@@ -171,14 +144,6 @@ function SimpleStudyView({
                   }`}
                 >
                   <td className="px-2 py-1.5 whitespace-nowrap">
-                    <input
-                      type="checkbox"
-                      checked={selectedStudies.has(studyInstanceUid)}
-                      onChange={() => handleCheckboxChange(studyInstanceUid)}
-                      className="cursor-pointer"
-                    />
-                  </td>
-                  <td className="px-2 py-1.5 whitespace-nowrap">
                     {hasPdf && onPdfToggle ? (
                       <button
                         onClick={() => onPdfToggle(studyInstanceUid)}
@@ -203,6 +168,7 @@ function SimpleStudyView({
                       <Button
                         type={ButtonEnums.type.primary}
                         size={ButtonEnums.size.small}
+                        onClick={() => {}}
                       >
                         {t('StudyList:View')}
                       </Button>

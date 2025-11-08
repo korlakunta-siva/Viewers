@@ -30,8 +30,13 @@ loadDynamicConfig(window.config).then(config_json => {
    * Combine our appConfiguration with installed extensions and modes.
    * In the future appConfiguration may contain modes added at runtime.
    *  */
+  // Ensure config has required properties for PropTypes validation
+  const config = (window && window.config && typeof window.config === 'object') ? window.config : {};
   const appProps = {
-    config: window ? window.config : {},
+    config: {
+      routerBasename: config.routerBasename || '/',
+      ...config,
+    },
     defaultExtensions,
     defaultModes,
   };
