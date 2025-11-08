@@ -7,6 +7,7 @@ import Dropzone from 'react-dropzone';
 import filesToStudies from './filesToStudies';
 import { loadFilesFromEncryptedZip, extractEncryptedZipForDownload } from './encryptedZipLoader';
 import EncryptedZipPasswordDialog from './EncryptedZipPasswordDialog';
+import { convertDicomToStaticDicomWeb, saveStaticDicomWebFolder } from './dicomToStaticDicomWeb';
 
 import { extensionManager } from '../../App';
 
@@ -74,6 +75,8 @@ function Local({ modePath }: LocalProps) {
   const [pendingZipFile, setPendingZipFile] = useState<File | null>(null);
   const [zipPassword, setZipPassword] = useState<string | null>(null);
   const [isExtractingForDownload, setIsExtractingForDownload] = useState(false);
+  const [isConvertingToStaticDicomWeb, setIsConvertingToStaticDicomWeb] = useState(false);
+  const [outputDirectoryHandle, setOutputDirectoryHandle] = useState<any>(null);
 
   const LoadingIndicatorProgress = customizationService.getCustomization(
     'ui.loadingIndicatorProgress'
@@ -163,6 +166,87 @@ function Local({ modePath }: LocalProps) {
     } else {
       navigate(`/?${decodeURIComponent(query.toString())}`);
     }
+  };
+
+  // Handle conversion to static-dicomweb format
+  const handleConvertToStaticDicomWeb = async () => {
+    // First, let user select input folder with DICOM files
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.webkitdirectory = true;
+    input.mozdirectory = true;
+    input.style.display = 'none';
+
+    input.onchange = async (e: any) => {
+      const files = Array.from(e.target.files || []) as File[];
+
+      // Filter for DICOM files
+      const dicomFiles = files.filter(f =>
+        f.type === 'application/dicom' || f.name.toLowerCase().endsWith('.dcm')
+      );
+
+      if (dicomFiles.length === 0) {
+        alert('No DICOM files found in the selected folder.');
+        return;
+      }
+
+      try {
+        setIsConvertingToStaticDicomWeb(true);
+        setLoadingProgress({ loaded: 0, total: dicomFiles.length });
+
+        const progressCallback = (loaded, total) => {
+          setLoadingProgress({ loaded, total });
+        };
+
+        // Convert DICOM files to static-dicomweb format
+        console.log('Starting conversion of', dicomFiles.length, 'DICOM files');
+        const outputFiles = await convertDicomToStaticDicomWeb(dicomFiles, progressCallback);
+
+        console.log('Conversion result:', {
+          totalFiles: dicomFiles.length,
+          outputFilesCount: Object.keys(outputFiles).length,
+          outputFiles: Object.keys(outputFiles)
+        });
+
+        if (Object.keys(outputFiles).length === 0) {
+          const errorMsg = `No files were converted. Found ${dicomFiles.length} DICOM file(s) in the folder. Please check the browser console for details.`;
+          console.error(errorMsg);
+          alert(errorMsg);
+          setIsConvertingToStaticDicomWeb(false);
+          return;
+        }
+
+        // Save the static-dicomweb folder
+        // Pass the output directory handle if we have one, otherwise will use ZIP fallback
+        const result = await saveStaticDicomWebFolder(outputFiles, 'dicomweb', outputDirectoryHandle);
+
+        if (result.success) {
+          if (result.method === 'folder') {
+            alert('Static DICOMweb folder created successfully!');
+            // Store the directory handle for future use
+            if (result.directoryHandle) {
+              setOutputDirectoryHandle(result.directoryHandle);
+            }
+          } else {
+            alert('Static DICOMweb files packaged as ZIP. The ZIP file has been downloaded.');
+          }
+        } else if (result.cancelled) {
+          // User cancelled, no message needed
+        } else {
+          alert(`Error: ${result.error || 'Failed to save static-dicomweb files'}`);
+        }
+      } catch (error) {
+        console.error('Error converting to static-dicomweb:', error);
+        alert(`Error: ${error.message || 'Failed to convert DICOM files to static-dicomweb format'}`);
+      } finally {
+        setIsConvertingToStaticDicomWeb(false);
+        setLoadingProgress({ loaded: 0, total: 0 });
+      }
+    };
+
+    document.body.appendChild(input);
+    input.click();
+    document.body.removeChild(input);
   };
 
   // Handle download of unencrypted DICOM files
@@ -395,6 +479,16 @@ function Local({ modePath }: LocalProps) {
                   </div>
                   <div className="flex justify-center pt-2">
                     {getEncryptedZipButton(handleEncryptedZipClick)}
+                  </div>
+                  <div className="flex justify-center pt-2">
+                    <Button
+                      variant="default"
+                      className="w-64"
+                      onClick={handleConvertToStaticDicomWeb}
+                      disabled={isConvertingToStaticDicomWeb}
+                    >
+                      {isConvertingToStaticDicomWeb ? 'Converting...' : 'Convert Folder to Static DICOMweb'}
+                    </Button>
                   </div>
                   {zipPassword && pendingZipFile && (
                     <div className="flex justify-center pt-2">
