@@ -681,13 +681,14 @@ function WorkList({
 
   // Action items for direct icons in app bar (with tooltips)
   const actionItems = [
-    {
-      title: t('Header:Theme') || 'Theme',
-      icon: 'color-change',
-      tooltip: t('Header:Theme') || 'Theme',
-      onClick: () => {}, // ThemeSelector handles its own dropdown
-      component: ThemeSelector, // Use component instead of onClick
-    },
+    // Theme selector - commented out for now, keep code for future use
+    // {
+    //   title: t('Header:Theme') || 'Theme',
+    //   icon: 'color-change',
+    //   tooltip: t('Header:Theme') || 'Theme',
+    //   onClick: () => {}, // ThemeSelector handles its own dropdown
+    //   component: ThemeSelector, // Use component instead of onClick
+    // },
     {
       title: t('Header:Help') || 'Help',
       icon: 'info',
@@ -741,11 +742,12 @@ function WorkList({
       icon: 'download',
       onClick: () => setShowExtractDialog(true),
     },
-    {
-      title: t('Header:Theme') || 'Theme',
-      icon: 'color-change',
-      component: ThemeSelectorMenu,
-    },
+    // Theme selector menu - commented out for now, keep code for future use
+    // {
+    //   title: t('Header:Theme') || 'Theme',
+    //   icon: 'color-change',
+    //   component: ThemeSelectorMenu,
+    // },
     {
       title: HelpModal?.menuTitle ?? (t('Header:Help') || 'Help'),
       icon: 'info',
