@@ -168,8 +168,8 @@ function Local({ modePath }: LocalProps) {
     }
   };
 
-  // Handle conversion to static-dicomweb format
-  const handleConvertToStaticDicomWeb = async () => {
+  // Handle conversion to static-dicomweb format - commented out for now
+  /* const handleConvertToStaticDicomWeb = async () => {
     // First, let user select input folder with DICOM files
     const input = document.createElement('input');
     input.type = 'file';
@@ -247,7 +247,7 @@ function Local({ modePath }: LocalProps) {
     document.body.appendChild(input);
     input.click();
     document.body.removeChild(input);
-  };
+  }; */
 
   // Handle download of unencrypted DICOM files
   const handleDownloadDicom = async () => {
@@ -480,7 +480,8 @@ function Local({ modePath }: LocalProps) {
                   <div className="flex justify-center pt-2">
                     {getEncryptedZipButton(handleEncryptedZipClick)}
                   </div>
-                  <div className="flex justify-center pt-2">
+                  {/* Convert Folder to Static DICOMweb - commented out for now */}
+                  {/* <div className="flex justify-center pt-2">
                     <Button
                       variant="default"
                       className="w-64"
@@ -489,7 +490,7 @@ function Local({ modePath }: LocalProps) {
                     >
                       {isConvertingToStaticDicomWeb ? 'Converting...' : 'Convert Folder to Static DICOMweb'}
                     </Button>
-                  </div>
+                  </div> */}
                   {zipPassword && pendingZipFile && (
                     <div className="flex justify-center pt-2">
                       <Button
